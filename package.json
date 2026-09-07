@@ -1,0 +1,14 @@
+{
+  "name": "dindin-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "uv run python tools/build_web.py",
+    "serve": "cd web && python3 -m http.server 8765",
+    "test": "node tests/web/dom_test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "pyodide": "0.28.0"
+  }
+}
