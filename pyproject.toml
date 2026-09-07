@@ -1,0 +1,23 @@
+[project]
+name = "dindin"
+version = "0.1.0"
+description = "Jogo de simulacao: venda de dindin pelo Brasil"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = ["textual>=8.2.8"]
+
+[project.scripts]
+dindin = "dindin.__main__:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "textual-dev>=1.7"]
+
+[build-system]
+requires = ["uv_build>=0.9.6,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# Sem .pyc: bytecode velho de tools/ ja causou falha fantasma duas vezes.
+addopts = "-p no:cacheprovider"

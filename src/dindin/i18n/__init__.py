@@ -1,0 +1,58 @@
+"""Tradutor regional. A camada sim/ nunca chama t(): ela devolve chaves."""
+
+import importlib
+from random import Random
+
+from .barks import pool
+from .base_ptbr import BASE
+
+REGIOES_I18N = ("ce", "rj", "mg", "sp", "rs", "pa")
+
+
+def carregar_override(regiao: str) -> dict[str, str]:
+    try:
+        mod = importlib.import_module(f".overrides.{regiao}", __package__)
+    except ModuleNotFoundError:
+        return {}
+    return dict(getattr(mod, "OVERRIDE", {}))
+
+
+class Translator:
+    """Resolve override -> base -> marcador visivel de chave faltando."""
+
+    def __init__(self, regiao: str) -> None:
+        self.regiao = regiao
+        self._base = BASE
+        self._over = carregar_override(regiao)
+
+    def t(self, key: str, /, **kw: object) -> str:
+        tpl = self._over.get(key) or self._base.get(key)
+        if tpl is None:
+            return f"⟨missing:{key}⟩"
+        if not kw:
+            return tpl
+        try:
+            return tpl.format(**kw)
+        except (KeyError, IndexError):
+            return tpl
+
+    def bark(self, tag: str, rng: Random) -> str:
+        opcoes = pool(self.regiao, tag)
+        return rng.choice(opcoes) if opcoes else ""
+
+    @property
+    def produto(self) -> str:
+        return self.t("produto.sing")
+
+    @property
+    def produtos(self) -> str:
+        return self.t("produto.plur")
+
+
+def money(centavos: int) -> str:
+    """Formata em real, com separadores brasileiros."""
+    sinal = "-" if centavos < 0 else ""
+    v = abs(centavos)
+    inteiro, cent = divmod(v, 100)
+    milhar = f"{inteiro:,}".replace(",", ".")
+    return f"{sinal}R$ {milhar},{cent:02d}"

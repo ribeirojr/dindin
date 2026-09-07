@@ -1,0 +1,163 @@
+"""A ponte JSON: o que atravessa pro navegador tem que ser JSON puro."""
+
+import json
+
+import pytest
+
+from dindin import bridge
+
+
+def test_estado_novo_e_json_puro():
+    st = bridge.novo_jogo("pa", 77)
+    assert json.loads(json.dumps(st)) == st
+    assert st["regiao"] == "pa"
+    assert st["dia"] == 1
+    assert st["caixa"] == 8000
+
+
+@pytest.mark.parametrize("regiao", ["ce", "rj", "mg", "sp", "rs", "pa"])
+def test_catalogo_serializa_em_json(regiao):
+    cat = bridge.catalogo(regiao)
+    assert json.loads(json.dumps(cat, ensure_ascii=False)) == cat
+    assert len(cat["textos"]) > 100
+    assert cat["sabores"] and cat["insumos"] and cat["locais"]
+    assert not any(v.startswith("⟨missing:") for v in cat["textos"].values())
+
+
+def test_cada_regiao_tem_produto_proprio_na_ponte():
+    produtos = {r["key"]: r["produto"] for r in bridge.regioes()}
+    assert produtos == {
+        "ce": "dindin", "rj": "sacolé", "mg": "laranjinha",
+        "sp": "geladinho", "rs": "gelinho", "pa": "chup-chup",
+    }
+
+
+def test_dia_inteiro_atravessa_json():
+    st = bridge.novo_jogo("pa", 77)
+    plano = {
+        "compras": {"polpa_comum": 3, "acucar": 1, "saquinho": 1},
+        "producao": {"coco": 40},
+        "precos": {"coco": 190},
+        "gelo": 0,
+    }
+    out = bridge.jogar_dia(st, plano)
+    assert json.loads(json.dumps(out, ensure_ascii=False)) == out
+
+    r = out["resultado"]
+    assert r["dia"] == 1
+    assert r["receita"] - r["custo_insumos"] - r["custo_fixo"] == r["lucro"]
+    assert out["estado"]["dia"] == 2
+
+
+def test_eventos_atravessam_como_chave_e_nao_texto():
+    """O sim nao pode mandar texto pronto: quem traduz e o front."""
+    st = bridge.novo_jogo("pa", 5)
+    out = bridge.jogar_dia(st, {"producao": {}, "precos": {}, "compras": {}})
+    for e in out["resultado"]["eventos"]:
+        assert e["text_key"].startswith("evento.")
+        assert "key" in e
+
+
+def test_curva_de_preco_acha_o_melhor_lucro():
+    st = bridge.novo_jogo("pa", 77)
+    c = bridge.curva_de_preco(st, "coco")
+    assert json.loads(json.dumps(c)) == c
+    assert c["melhor_preco"] > c["custo"], "vender abaixo do custo nunca e o melhor"
+    melhor = max(c["pontos"], key=lambda p: p["lucro_rel"])
+    assert melhor["preco"] == c["melhor_preco"]
+
+
+def test_curva_cai_quando_o_preco_sobe():
+    st = bridge.novo_jogo("ce", 1)
+    pontos = bridge.curva_de_preco(st, "coco")["pontos"]
+    respostas = [p["resposta"] for p in pontos]
+    assert respostas == sorted(respostas, reverse=True)
+
+
+def test_estado_sobrevive_ida_e_volta():
+    st = bridge.novo_jogo("rs", 3)
+    st2 = bridge.estado_para_json(bridge.estado_de_json(st))
+    for campo in ("seed", "regiao", "dia", "caixa", "local_atual"):
+        assert st2[campo] == st[campo]
+
+
+def test_nenhum_enum_vaza_pra_ponte():
+    """Enum tem que virar string, senao JSON.stringify quebra no JS."""
+    st = bridge.novo_jogo("pa", 9)
+    out = bridge.jogar_dia(st, {"producao": {}, "precos": {}, "compras": {}})
+    clima = out["resultado"]["clima"]
+    assert isinstance(clima["kind"], str)
+
+
+def test_gelo_nao_aparece_na_feira():
+    """O jogo compra gelo sozinho conforme o ponto. Se ele tambem estivesse
+    a venda na feira, o jogador pagaria duas vezes pelo mesmo saco."""
+    for regiao in ("ce", "pa"):
+        keys = [i["key"] for i in bridge.catalogo(regiao)["insumos"]]
+        assert "gelo" not in keys
+
+
+def test_isopor_atravessa_a_ponte():
+    st = bridge.novo_jogo("pa", 77)
+    st["local_atual"] = "isopor"
+    info = bridge.isopores(st)
+    assert json.loads(json.dumps(info, ensure_ascii=False)) == info
+    assert info["precisa"] is True
+    assert len(info["opcoes"]) == 3
+    assert all(o["custo_por_dia"] > 0 for o in info["opcoes"])
+
+
+def test_comprar_isopor_pela_ponte():
+    st = bridge.novo_jogo("pa", 77)
+    out = bridge.comprar_isopor(st, "simples")
+    assert out["ok"]
+    assert out["estado"]["isopor"] == "simples"
+    assert out["estado"]["isopor_dias"] == 14
+    assert out["estado"]["caixa"] < st["caixa"]
+
+
+def test_carrinho_entra_na_conta_de_quanto_da_pra_fazer():
+    """Bug da web: 'Da pra fazer' ficava congelado em 0 porque a conta
+    era feita antes de o jogador por as coisas no carrinho."""
+    st = bridge.novo_jogo("pa", 1)
+    antes = {s["key"]: s["pode_produzir"] for s in bridge.sabores_do_jogador(st)}
+    assert antes["coco"] == 0
+
+    carrinho = {"polpa_comum": 3, "acucar": 1, "saquinho": 1}
+    depois = {s["key"]: s["pode_produzir"]
+              for s in bridge.sabores_do_jogador(st, carrinho)}
+    assert depois["coco"] > 0, "comprar no carrinho tem que liberar producao"
+
+
+def test_sabores_dizem_a_receita_e_o_que_falta():
+    st = bridge.novo_jogo("pa", 1)
+    coco = next(s for s in bridge.sabores_do_jogador(st) if s["key"] == "coco")
+    assert coco["receita"], "precisa da receita pro tooltip"
+    assert {"key", "nome", "unidade", "por_dez", "tem"} <= set(coco["receita"][0])
+    assert coco["faltando"], "sem insumo nenhum, tem que listar o que falta"
+
+    completo = next(s for s in bridge.sabores_do_jogador(
+        st, {"polpa_comum": 3, "acucar": 1, "saquinho": 1}) if s["key"] == "coco")
+    assert completo["faltando"] == []
+
+
+def test_carrinho_nao_altera_o_estado_de_verdade():
+    """A previa nao pode gastar insumo que o jogador ainda nao comprou."""
+    st = bridge.novo_jogo("pa", 1)
+    bridge.sabores_do_jogador(st, {"polpa_comum": 99})
+    assert st["inventario"]["ingredientes"] == {}
+
+
+def test_producao_pendente_reduz_o_maximo_dos_outros_sabores():
+    """Bug: 'Da pra fazer' do maracuja nao caia ao reservar a polpa no coco."""
+    st = bridge.novo_jogo("pa", 1)
+    carrinho = {"polpa_comum": 3, "acucar": 1, "saquinho": 1}
+
+    livre = {s["key"]: s["pode_produzir"]
+             for s in bridge.sabores_do_jogador(st, carrinho)}
+    apertado = {s["key"]: s["pode_produzir"]
+                for s in bridge.sabores_do_jogador(st, carrinho, {"coco": 40})}
+
+    assert apertado["maracuja"] < livre["maracuja"]
+    assert apertado["limao"] < livre["limao"]
+    assert apertado["coco"] == livre["coco"], "o proprio pedido nao baixa o teto"

@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info
+build/
+dist/
+wheels/
+
+# Ambiente virtual
+.venv
+
+# Node (só usado pros testes da versão web)
+node_modules/
+
+# Gerado por tools/build_web.py — cópia de src/dindin
+web/py/
+
+# Testes
+.pytest_cache/
