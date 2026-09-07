@@ -1,0 +1,162 @@
+/* Paleta tropical: amarelo, laranja, verde. */
+$dindin-amarelo: #f5c518;
+$dindin-laranja: #f28c28;
+$dindin-verde: #2fa84f;
+$dindin-rosa: #e8517a;
+$dindin-roxo: #7b4fa8;
+
+Screen {
+    background: $surface;
+}
+
+#titulo-arte {
+    color: $dindin-amarelo;
+    text-align: center;
+    padding: 1 0;
+}
+
+#subtitulo {
+    color: $text-muted;
+    text-align: center;
+    padding-bottom: 1;
+}
+
+.painel {
+    border: round $primary;
+    padding: 1 2;
+    margin: 0 1;
+}
+
+.cabecalho-jogo {
+    height: 3;
+    background: $panel;
+    padding: 0 1;
+}
+
+.stat {
+    width: 1fr;
+    content-align: center middle;
+}
+
+.stat-label {
+    color: $text-muted;
+}
+
+.titulo-tela {
+    text-style: bold;
+    color: $dindin-laranja;
+    padding: 1 2 0 2;
+}
+
+.subtitulo-tela {
+    color: $text-muted;
+    padding: 0 2 1 2;
+}
+
+DataTable {
+    height: auto;
+    max-height: 18;
+    margin: 0 2;
+}
+
+.linha-botoes {
+    height: auto;
+    align: center middle;
+    padding: 1 0;
+}
+
+.linha-botoes Button {
+    margin: 0 1;
+}
+
+#menu-principal {
+    align: center middle;
+}
+
+#menu-principal Button {
+    width: 32;
+    margin: 0 0 1 0;
+}
+
+#lista-regioes {
+    width: 34;
+    height: auto;
+    border: round $primary;
+}
+
+#preview-regiao {
+    width: 1fr;
+    border: round $accent;
+    padding: 1 2;
+    margin-left: 1;
+}
+
+.lucro {
+    color: $success;
+    text-style: bold;
+}
+
+.prejuizo {
+    color: $error;
+    text-style: bold;
+}
+
+.aviso {
+    color: $warning;
+    text-style: bold;
+    padding: 0 2;
+}
+
+#feed-barks {
+    height: 12;
+    border: round $accent;
+    margin: 0 2;
+}
+
+FreezerGauge {
+    height: auto;
+    padding: 0 2;
+}
+
+PriceThermometer {
+    height: 1;
+}
+
+.tile {
+    width: 1fr;
+    height: 5;
+    border: round $primary;
+    content-align: center middle;
+}
+
+ModalScreen {
+    align: center middle;
+}
+
+#caixa-modal {
+    width: 62;
+    height: auto;
+    border: thick $accent;
+    background: $surface;
+    padding: 1 2;
+}
+
+/* Tela do gelo: clima e informacao lado a lado */
+IceScreen WeatherCard { width: 1fr; }
+IceScreen #gelo-info { width: 1fr; }
+
+/* Escolha de isopor */
+CoolerScreen .painel { height: auto; align: left middle; }
+CoolerScreen .iso-desc { width: 1fr; }
+CoolerScreen .painel Button { width: 14; }
+
+/* Tela de plano: cena a esquerda, resumo do dia a direita */
+PlanScreen #cena-plano { width: 1fr; height: auto; }
+PlanScreen .painel { width: 1fr; height: auto; }
+PlanScreen #plano-resumo { padding-top: 1; }
+SceneCard { height: auto; }
+SimulationScreen #cena-venda { height: auto; padding: 0 2; }
+
+/* Contador de dinheiro do dia */
+SimulationScreen #contador { width: auto; height: auto; color: $success; }
+SimulationScreen Horizontal { height: auto; align: center middle; padding: 1 0; }
