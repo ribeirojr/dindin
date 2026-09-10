@@ -66,6 +66,11 @@ const ICONE = {
 
 let estado = null, catalogo = null, carrinho = {}, producao = {},
     precos = {}, tempos = null, saboresDoDia = [];
+// null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
+let gelo = null;
+// Contador de passos do dia: cartoes aparecem/somem conforme o local.
+let passoN = 0;
+const tit = (nome) => `${++passoN}. ${nome}`;
 
 const money = (c) => {
   const s = c < 0 ? "-" : "";
@@ -79,6 +84,16 @@ const t = (k, vars) => {
 };
 
 // ------------------------------------------------------------------ boot
+/* No celular nao existe :hover, e o :focus em <span> e inconsistente no
+ * iOS. Um toque no "?" alterna a classe .aberta; tocar fora fecha. */
+document.addEventListener("click", (e) => {
+  const alvo = e.target.closest?.(".ajuda");
+  for (const a of document.querySelectorAll(".ajuda.aberta")) {
+    if (a !== alvo) a.classList.remove("aberta");
+  }
+  if (alvo) { e.preventDefault(); alvo.classList.toggle("aberta"); }
+});
+
 async function boot() {
   const barra = $(".barra-dentro"), txt = $(".carga-txt");
   try {
@@ -151,7 +166,7 @@ function cabecalho() {
 
 function telaDia() {
   const clima = eng.previsao(estado);
-  carrinho = {}; producao = {}; precos = {};
+  carrinho = {}; producao = {}; precos = {}; gelo = null; passoN = 0;
   saboresDoDia = eng.sabores(estado, {}, {});
 
   const app = $("#app");
@@ -195,12 +210,18 @@ function telaDia() {
   cc.append(cl);
   app.append(cc);
 
+  // --- isopor (equipamento, antes de gastar na feira)
+  const iso = cartaoIsopor();
+  if (iso) app.append(iso);
   // --- feira
   app.append(cartaoFeira());
   // --- cozinha
   app.append(cartaoCozinha());
   // --- preco (com o grafico)
   app.append(cartaoPreco(saboresDoDia));
+  // --- gelo (depende do quanto foi produzido)
+  const gl = cartaoGelo();
+  if (gl) app.append(gl);
   // Monta a tabela ja: esperar timeout deixava a cozinha vazia num primeiro frame.
   recarregarCozinha();
 
@@ -225,9 +246,67 @@ function dicaTexto(c) {
   return "Movimento normal.";
 }
 
+/* ---------------------------------------------------------------- isopor
+ * Fora de casa o isopor e equipamento: compra unica que dura N dias e
+ * define capacidade e derretimento. Sem ele nao da pra vender na rua.
+ */
+function cartaoIsopor() {
+  const info = eng.isopores(estado);
+  // Em casa o freezer resolve: nao precisa de isopor nem faz sentido mostrar.
+  if (estado.local_atual === "casa" && !info.atual) return null;
+
+  const c = el("div", "cartao");
+  c.append(el("h2", null, tit("Isopor")));
+
+  if (info.atual && !info.precisa) {
+    const atual = info.opcoes.find((o) => o.key === info.atual);
+    const urgente = info.acabando ? " atencao" : "";
+    const box = el("div", "isopor-atual" + urgente);
+    box.innerHTML =
+      `<div><span>Em uso</span><b>${atual?.nome ?? info.atual}</b></div>
+       <div><span>Dura mais</span><b>${info.dias_restantes} dia${
+         info.dias_restantes === 1 ? "" : "s"}</b></div>
+       <div><span>Capacidade</span><b>${atual?.capacidade ?? "-"}</b></div>`;
+    c.append(box);
+    if (info.acabando) {
+      c.append(el("div", "aviso", "O isopor ta no fim. Vale ja comprar outro."));
+    } else {
+      return c;   // ainda bom: nao polui a tela com a vitrine
+    }
+  } else {
+    c.append(el("p", "sub",
+      "Sem isopor nao da pra vender na rua. Ele dura varios dias."));
+  }
+
+  const grade = el("div", "isopor-grade");
+  for (const o of info.opcoes) {
+    const card = el("div", "isopor-op" + (o.pode ? "" : " sem-grana"));
+    card.innerHTML =
+      `<b>${o.nome}</b>
+       <div class="preco">${money(o.custo)}</div>
+       <div class="det">${o.dias} dias · cabe ${o.capacidade}</div>
+       <div class="det">${money(o.custo_por_dia)}/dia · derrete ${
+         Math.round(o.derretimento * 100)}%</div>
+       <div class="desc">${o.descricao}</div>`;
+    const b = el("button", o.pode ? "" : "desligado",
+                 o.pode ? "Comprar" : "Falta dinheiro");
+    b.disabled = !o.pode;
+    if (o.pode) {
+      b.onclick = () => {
+        const out = eng.comprarIsopor(estado, o.key);
+        if (out.ok) { estado = out.estado; telaDia(); }
+      };
+    }
+    card.append(b);
+    grade.append(card);
+  }
+  c.append(grade);
+  return c;
+}
+
 function cartaoFeira() {
   const c = el("div", "cartao");
-  c.append(el("h2", null, "1. Feira"));
+  c.append(el("h2", null, tit("Feira")));
   c.append(el("p", "sub", "Comprando em quantidade, sai mais barato."));
   const tab = el("table");
   tab.innerHTML = `<thead><tr><th>Insumo</th><th>Unid.</th>
@@ -282,7 +361,7 @@ function atualizarTotalFeira() {
 
 function cartaoCozinha() {
   const c = el("div", "cartao");
-  c.append(el("h2", null, "2. Cozinha"));
+  c.append(el("h2", null, tit("Cozinha")));
   c.append(el("p", "sub", t("cozinha.subtitulo")));
   const tab = el("table");
   tab.innerHTML = `<thead><tr><th>Sabor</th><th class="num">Custo</th>
@@ -367,7 +446,7 @@ function passo(get, set, delta = 1, getMax = null) {
 function cartaoPreco(sabores) {
   const c = el("div", "cartao");
   c.id = "cartao-preco";
-  c.append(el("h2", null, "3. Preço"));
+  c.append(el("h2", null, tit("Preço")));
   c.append(el("p", "sub",
     "A curva mostra quantos compram em cada preço. O losango é o preço de maior lucro."));
   c.append(el("div", null, "").id = "");
@@ -506,14 +585,76 @@ function desenharCurva(curva, getPreco) {
   return svg;
 }
 
+/* ------------------------------------------------------------------ gelo
+ * Um saco cobre ~50 unidades num dia ameno, mas so ~30 num dia escaldante.
+ * Por isso a escolha e do jogador: comprar de menos derrete o estoque.
+ */
+function cartaoGelo() {
+  if (estado.local_atual === "casa") return null;   // freezer de casa nao usa gelo
+
+  const c = el("div", "cartao");
+  c.append(el("h2", null, tit("Gelo")));
+  const corpo = el("div", "gelo-corpo");
+  c.append(corpo);
+  desenharGelo(corpo);
+  return c;
+}
+
+/** Total que vai pro isopor hoje: o que foi produzido + o que ja estava pronto. */
+function unidadesDoDia() {
+  return Object.values(producao).reduce((a, b) => a + b, 0)
+       + Object.values(estado.inventario.prontos ?? {}).reduce((a, b) => a + b, 0);
+}
+
+function desenharGelo(corpo) {
+  const unidades = unidadesDoDia();
+  const info = eng.infoDoGelo(estado, unidades);
+
+  // Primeira montagem do dia: segue a sugestao calculada pelo calor.
+  if (gelo === null) gelo = info.sugestao;
+  gelo = Math.min(gelo, 8);
+
+  const escolhido = info.opcoes[gelo] ?? info.opcoes[0];
+  const quente = info.cobertura < info.cobertura_normal;
+
+  corpo.innerHTML = "";
+  const topo = el("div", "gelo-topo");
+  topo.innerHTML =
+    `<div><span>Vai pro isopor</span><b>${unidades}</b></div>
+     <div><span>Um saco cobre</span><b class="${quente ? "quente" : ""}">${
+       info.cobertura}</b>${quente
+         ? ` <i>calor: era ${info.cobertura_normal}</i>` : ""}</div>
+     <div><span>Saco</span><b>${money(info.preco_saco)}</b></div>`;
+  corpo.append(topo);
+
+  const linha = el("div", "gelo-linha");
+  linha.append(passo(() => gelo, (v) => { gelo = v; desenharGelo(corpo); },
+                     1, () => 8));
+  const rot = el("div", "gelo-rotulo");
+  rot.innerHTML = `<b>${gelo}</b> saco${gelo === 1 ? "" : "s"} · ${
+    money(escolhido.custo)}`;
+  linha.append(rot);
+  corpo.append(linha);
+
+  const perde = escolhido.derrete;
+  const res = el("div", "gelo-resultado" + (perde ? " ruim" : " bom"));
+  res.textContent = perde
+    ? `Derrete ${perde} unidade${perde === 1 ? "" : "s"} — gelo de menos.`
+    : (unidades ? "Dá pra tudo. Nada derrete." : "Nada pra gelar ainda.");
+  corpo.append(res);
+
+  if (perde && info.sugestao > gelo) {
+    const b = el("button", "sugestao", `Levar ${info.sugestao} e não perder nada`);
+    b.onclick = () => { gelo = info.sugestao; desenharGelo(corpo); };
+    corpo.append(b);
+  }
+}
+
 // ------------------------------------------------------------------ o dia
 function rodarDia() {
-  const plano = { compras: carrinho, producao, precos, gelo: 0 };
-  if (estado.local_atual !== "casa") {
-    const total = Object.values(producao).reduce((a, b) => a + b, 0)
-                + Object.values(estado.inventario.prontos ?? {}).reduce((a, b) => a + b, 0);
-    plano.gelo = Math.max(1, Math.ceil(total / 50));
-  }
+  // O gelo agora e escolha do jogador (cartaoGelo). Em casa nao se usa.
+  const sacos = estado.local_atual === "casa" ? 0 : (gelo ?? 0);
+  const plano = { compras: carrinho, producao, precos, gelo: sacos };
   const out = eng.jogarDia(estado, plano);
   estado = out.estado;
   telaRelatorio(out.resultado, out.desbloqueou);
@@ -544,7 +685,7 @@ function telaRelatorio(r, desbloqueou) {
   const tab = el("table");
   tab.innerHTML = `<thead><tr><th>Sabor</th><th class="num">Levou</th>
     <th class="num">Vendeu</th><th class="num">Queriam</th>
-    <th class="num">Receita</th></tr></thead>`;
+    <th class="num">Derreteu</th><th class="num">Receita</th></tr></thead>`;
   const tb = el("tbody");
   for (const f of r.por_sabor) {
     const faltou = f.demanda_potencial > f.ofertados;
@@ -553,6 +694,8 @@ function telaRelatorio(r, desbloqueou) {
     tr.innerHTML = `<td>${nome}</td><td class="num">${f.ofertados}</td>
       <td class="num">${f.vendidos}</td>
       <td class="num ${faltou ? "destaque" : ""}">${f.demanda_potencial}</td>
+      <td class="num ${f.perdidos_derretimento ? "derreteu" : ""}">${
+        f.perdidos_derretimento || "-"}</td>
       <td class="num">${money(f.receita)}</td>`;
     tb.append(tr);
   }
@@ -563,6 +706,21 @@ function telaRelatorio(r, desbloqueou) {
     (a, f) => a + Math.max(0, f.demanda_potencial - f.ofertados), 0);
   if (perdida > 0) {
     c.append(el("div", "aviso", t("rel.sellout", { perdidos: perdida })));
+  }
+
+  // Derretimento sem explicacao e o pior tipo de punicao: o jogador perde
+  // estoque e nao sabe por que. Aqui ele ve quanto e o motivo.
+  const derretido = r.por_sabor.reduce((a, f) => a + f.perdidos_derretimento, 0);
+  if (derretido > 0) {
+    c.append(el("div", "aviso ruim",
+      `Derreteu ${derretido} unidade${derretido === 1 ? "" : "s"}. ` +
+      `Mais gelo (ou um isopor melhor) segura o estoque.`));
+  }
+  if (!r.por_sabor.length) {
+    c.append(el("div", "aviso ruim",
+      estado.local_atual === "casa"
+        ? "Nada foi pro ponto hoje — faltou sabor pronto e com preço."
+        : "Nada chegou ao ponto: sem isopor vivo (ou tudo derreteu antes)."));
   }
 
   const tiles = el("div", "tiles");
