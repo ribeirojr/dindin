@@ -161,3 +161,98 @@ def test_producao_pendente_reduz_o_maximo_dos_outros_sabores():
     assert apertado["maracuja"] < livre["maracuja"]
     assert apertado["limao"] < livre["limao"]
     assert apertado["coco"] == livre["coco"], "o proprio pedido nao baixa o teto"
+
+
+def test_socorro_usado_sobrevive_ida_e_volta():
+    """Bug: o campo se perdia no JSON e o socorro de falencia renascia todo
+    dia -- no navegador era impossivel perder o jogo."""
+    st = bridge.novo_jogo("ce", 1)
+    assert st["socorro_usado"] is False
+    st["socorro_usado"] = True
+    assert bridge.estado_para_json(bridge.estado_de_json(st))["socorro_usado"] is True
+
+
+def test_segunda_falencia_encerra_o_jogo_na_ponte():
+    st = bridge.novo_jogo("ce", 1)
+    st["caixa"] = 0
+    st["socorro_usado"] = True
+    out = bridge.jogar_dia(st, {"producao": {}, "precos": {}, "compras": {}})
+    assert out["estado"]["encerrado"] == "falencia"
+
+
+def test_validade_dos_insumos_sobrevive_ida_e_volta():
+    """Bug: a volta do JSON zerava a validade dos lotes e insumo perecivel
+    nunca vencia no navegador."""
+    from dindin.sim.economy import comprar
+
+    state = bridge.estado_de_json(bridge.novo_jogo("ce", 1))
+    comprar(state, {"polpa_comum": 2})   # validade de 30 dias
+    d = bridge.estado_para_json(state)
+
+    voltou = bridge.estado_de_json(d)
+    lotes = voltou.inventario.ingredientes["polpa_comum"]
+    assert all(l.dia_validade == 31 for l in lotes)
+
+    # E vencendo de verdade: no dia 40 a polpa some.
+    perdas = voltou.inventario.expirar(40)
+    assert perdas.get("polpa_comum", 0) == 2
+
+
+def test_capacidade_base_do_freezer_sobrevive_ida_e_volta():
+    st = bridge.novo_jogo("ce", 1)
+    assert st["capacidade_freezer_base"] == 60
+    st["upgrades"] = ["freezer_maior"]
+    st2 = bridge.estado_para_json(bridge.estado_de_json(st))
+    assert st2["capacidade_freezer_base"] == 60, "base nao inclui o upgrade"
+    assert st2["capacidade_freezer"] == 180, "total inclui o upgrade"
+
+
+def test_catalogo_traz_as_falas_regionais():
+    """A web usava falas pt-BR neutras; o catalogo agora leva as da regiao."""
+    from dindin.sim.types import BarkTag
+
+    ce = bridge.catalogo("ce")["barks"]
+    pa = bridge.catalogo("pa")["barks"]
+    assert any("dindin" in f for f in ce["compra_simples"])
+    assert any("maninho" in f for f in pa["compra_simples"])
+    for tag in BarkTag:
+        assert ce[tag.value], f"ce sem falas para {tag.value}"
+
+
+def test_gelo_nao_conta_o_que_nem_cabe_no_isopor():
+    """Sugerir gelo pra estoque que nao vai pro ponto era dinheiro jogado fora."""
+    st = bridge.novo_jogo("ce", 1)
+    st["local_atual"] = "isopor"
+    st["locais_desbloqueados"] = ["casa", "isopor"]
+    st["isopor"] = "simples"        # cabe 100
+    st["isopor_dias"] = 10
+    info = bridge.info_do_gelo(st, 250)
+    assert info["unidades"] == 100
+    assert info["sugestao"] <= -(-100 // 20), "sugestao dimensionada pro que cabe"
+
+
+def test_dia_comeca_no_melhor_ponto_ja_liberado():
+    """Depois do socorro o jogador volta pra casa -- mas o ponto continua
+    dele: o dia seguinte tem que voltar pra la sem pagar entrada de novo."""
+    st = bridge.novo_jogo("ce", 1)
+    st["local_atual"] = "casa"
+    st["locais_desbloqueados"] = ["casa", "isopor"]
+    st["isopor"] = "simples"
+    st["isopor_dias"] = 10
+    caixa_antes = st["caixa"]
+    out = bridge.jogar_dia(st, {"producao": {}, "precos": {}, "compras": {}})
+    assert out["resultado"]["local"] == "isopor"
+    # Voltar e de graca: nada de custo de entrada (so o custo fixo do dia).
+    assert caixa_antes - out["estado"]["caixa"] <= 300
+
+
+def test_sem_isopor_vivo_o_dia_roda_de_casa():
+    st = bridge.novo_jogo("ce", 1)
+    st["local_atual"] = "isopor"
+    st["locais_desbloqueados"] = ["casa", "isopor"]
+    st["isopor"] = None
+    out = bridge.jogar_dia(st, {"producao": {}, "precos": {}, "compras": {}})
+    assert out["resultado"]["local"] == "casa"
+    assert out["resultado"]["custo_fixo"] == 0, "em casa nao paga o fixo da rua"
+    # O ponto continua do jogador: e o que mantem a vitrine de isopor visivel.
+    assert out["estado"]["local_atual"] == "isopor"

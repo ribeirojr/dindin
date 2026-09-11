@@ -40,3 +40,38 @@ def test_versao_incompativel_e_ignorada(tmp_path):
     destino = tmp_path / "save.json"
     destino.write_text('{"versao": 999}', encoding="utf-8")
     assert carregar(destino) is None
+
+
+def test_isopor_e_socorro_sobrevivem_ao_save(tmp_path):
+    """Sem isso, carregar o jogo na rua 'sumia' com a caixa comprada e
+    devolvia o socorro que ja tinha sido usado."""
+    s = GameState(seed=7, regiao="ce", local_atual="isopor",
+                  locais_desbloqueados=["casa", "isopor"],
+                  isopor="bom", isopor_dias=11, socorro_usado=True)
+    destino = tmp_path / "save.json"
+    salvar(s, destino)
+    voltou = carregar(destino)
+
+    assert voltou is not None
+    assert voltou.isopor == "bom"
+    assert voltou.isopor_dias == 11
+    assert voltou.socorro_usado is True
+
+
+def test_save_antigo_sem_os_campos_novos_ainda_carrega(tmp_path):
+    """Retrocompatibilidade: um save de antes destes campos usa os defaults."""
+    s = GameState(seed=1, regiao="pa")
+    destino = tmp_path / "save.json"
+    salvar(s, destino)
+
+    import json
+    dados = json.loads(destino.read_text(encoding="utf-8"))
+    for campo in ("isopor", "isopor_dias", "socorro_usado"):
+        dados.pop(campo, None)
+    destino.write_text(json.dumps(dados), encoding="utf-8")
+
+    voltou = carregar(destino)
+    assert voltou is not None
+    assert voltou.isopor is None
+    assert voltou.isopor_dias == 0
+    assert voltou.socorro_usado is False

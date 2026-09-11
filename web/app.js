@@ -607,8 +607,9 @@ function unidadesDoDia() {
 }
 
 function desenharGelo(corpo) {
-  const unidades = unidadesDoDia();
-  const info = eng.infoDoGelo(estado, unidades);
+  // A bridge corta pro que cabe no isopor: gelo pro que nem vai nao conta.
+  const info = eng.infoDoGelo(estado, unidadesDoDia());
+  const unidades = info.unidades;
 
   // Primeira montagem do dia: segue a sugestao calculada pelo calor.
   if (gelo === null) gelo = info.sugestao;
@@ -785,6 +786,7 @@ function telaRelatorio(r, desbloqueou) {
   app.append(acoes);
 }
 
+// Fallback neutro caso o catalogo nao tenha a fala regional.
 const FALAS = {
   compra_simples: "Me vê um aí!",
   compra_gourmet: "Esse cremoso é bom demais!",
@@ -795,7 +797,11 @@ const FALAS = {
   chuva: "Vou correr antes de molhar.",
   fila: "Tem fila, hein!",
 };
-const falaDe = (tag) => FALAS[tag] ?? "Me vê um aí!";
+const falaDe = (tag) => {
+  const pool = catalogo?.barks?.[tag];
+  if (pool?.length) return pool[Math.floor(Math.random() * pool.length)];
+  return FALAS[tag] ?? "Me vê um aí!";
+};
 
 function telaFim() {
   const app = $("#app");

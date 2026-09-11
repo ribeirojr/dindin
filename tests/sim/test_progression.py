@@ -5,6 +5,27 @@ from dindin.sim import progression
 from dindin.sim.state import GameState
 
 
+def test_melhor_local_e_o_mais_avancado_ja_liberado():
+    s = GameState(local_atual="casa",
+                  locais_desbloqueados=["casa", "isopor", "praia"])
+    assert progression.melhor_local(s) == "praia"
+
+
+def test_melhor_local_no_comeco_e_casa():
+    assert progression.melhor_local(GameState()) == "casa"
+
+
+def test_socorro_nao_tira_o_ponto_do_jogador():
+    """Depois do socorro ele volta pra casa, mas o ponto continua liberado --
+    e a volta (via melhor_local) nao pode cobrar entrada de novo."""
+    s = GameState(local_atual="praia", caixa=0,
+                  locais_desbloqueados=["casa", "isopor", "praia"])
+    assert progression.tentar_socorro(s)
+    assert s.local_atual == "casa"
+    assert "praia" in s.locais_desbloqueados
+    assert progression.melhor_local(s) == "praia"
+
+
 def test_nao_desbloqueia_antes_da_meta():
     s = GameState(local_atual="casa", caixa=LOCAIS["casa"].meta_caixa - 1)
     assert progression.pode_desbloquear(s) is None

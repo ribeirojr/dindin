@@ -135,6 +135,15 @@ def simulate_day(state: GameState, plan: DayPlan, rng: Random | None = None,
         else:
             for k, v in prontos.items():
                 ofertados[k] = int(v * cap_dia / total_prontos)
+            # O piso do int() deixa vagas no isopor: completa com quem
+            # ainda tem estoque parado em casa.
+            sobra_cap = cap_dia - sum(ofertados.values())
+            for k in sorted(prontos, key=lambda x: -(prontos[x] - ofertados[x])):
+                if sobra_cap <= 0:
+                    break
+                extra = min(sobra_cap, prontos[k] - ofertados[k])
+                ofertados[k] += extra
+                sobra_cap -= extra
     ofertados = {k: v for k, v in ofertados.items() if v > 0 and k in plan.precos}
 
     # 6. Vendas.

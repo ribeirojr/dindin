@@ -105,8 +105,11 @@ class DindinApp(App[None]):
     async def _um_dia(self) -> None:
         state = self.state
         assert state is not None
+        # Quem caiu pra casa (socorro, isopor rachado) tenta voltar pro ponto
+        # mais avancado que ja e dele -- sem isso ficaria preso em casa.
+        state.local_atual = progression.melhor_local(state)
         if not await self._garantir_isopor():
-            # Sem caixa e sem dinheiro pra comprar: volta pra casa.
+            # Sem caixa e sem dinheiro pra comprar: vende de casa hoje.
             state.local_atual = "casa"
         clima = clima_do_dia(state, state.dia)
 

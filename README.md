@@ -127,7 +127,7 @@ Detalhes e medições em [`web/README.md`](web/README.md).
 
 ```bash
 uv sync                              # instala tudo
-uv run pytest                        # 183 testes
+uv run pytest                        # 202 testes
 npm test                             # testa a versão web num DOM real
 uv run python tools/balance_sim.py   # confere o balanceamento
 ```

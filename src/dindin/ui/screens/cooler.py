@@ -51,10 +51,22 @@ class CoolerScreen(Screen[str | None]):
         if not self.obrigatorio:
             with Horizontal(classes="linha-botoes"):
                 yield Button("Agora não", id="pular")
+        elif not self._pode_alguma():
+            # Sem dinheiro pra caixa nenhuma a tela viraria beco sem saida:
+            # todo botao desabilitado e escape mudo. A saida e vender de casa.
+            yield Static("[red]Não dá pra pagar nenhuma caixa hoje.[/]",
+                         classes="aviso")
+            with Horizontal(classes="linha-botoes"):
+                yield Button("Vender de casa hoje", variant="warning",
+                             id="pular")
         yield Footer()
 
+    def _pode_alguma(self) -> bool:
+        return any(self.state.caixa >= ISOPORES[k].custo
+                   for k in ORDEM_ISOPORES)
+
     def action_cancelar(self) -> None:
-        if not self.obrigatorio:
+        if not self.obrigatorio or not self._pode_alguma():
             self.dismiss(None)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

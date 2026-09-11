@@ -61,7 +61,7 @@ if (!titulos().includes("1. Feira")) falhas.push("em casa a Feira devia ser o pa
 console.log("\n=== 2. ir pra rua com dinheiro no bolso ===");
 let e = api.getEstado();
 e.caixa = 30000;                      // R$300: da pra isopor + insumos
-e.desbloqueados = ["casa", "isopor"];
+e.locais_desbloqueados = ["casa", "isopor"];
 e.local_atual = "isopor";
 api.setEstado(e);
 api.telaDia();

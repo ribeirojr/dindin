@@ -28,6 +28,9 @@ def salvar(state: GameState, caminho: Path | None = None) -> Path:
         "capacidade_freezer": state.capacidade_freezer,
         "upgrades": sorted(state.upgrades),
         "vendas_recentes": dict(state.vendas_recentes),
+        "socorro_usado": state.socorro_usado,
+        "isopor": state.isopor,
+        "isopor_dias": state.isopor_dias,
         "encerrado": state.encerrado,
         "inventario": {
             "ingredientes": {
@@ -67,5 +70,9 @@ def carregar(caminho: Path | None = None) -> GameState | None:
         inventario=inv, capacidade_freezer=dados["capacidade_freezer"],
         upgrades=set(dados["upgrades"]),
         vendas_recentes=dict(dados.get("vendas_recentes", {})),
+        # .get com default: saves antigos (sem estes campos) continuam validos.
+        socorro_usado=bool(dados.get("socorro_usado", False)),
+        isopor=dados.get("isopor"),
+        isopor_dias=int(dados.get("isopor_dias", 0)),
         encerrado=dados.get("encerrado"),
     )

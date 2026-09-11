@@ -22,6 +22,49 @@ async def test_titulo_leva_pra_escolha_de_regiao():
         assert app.screen.__class__.__name__ == "RegionSelectScreen"
 
 
+async def test_cooler_obrigatorio_sem_dinheiro_tem_saida():
+    """Softlock: sem caixa pra isopor nenhum, todo botao ficava desabilitado
+    e o escape mudo -- o jogador ficava preso na tela pra sempre."""
+    from textual.app import App
+
+    from dindin.i18n import Translator
+    from dindin.sim.state import GameState
+    from dindin.ui.screens.cooler import CoolerScreen
+
+    class Host(App[None]):
+        pass
+
+    app = Host()
+    async with app.run_test(size=TAMANHO) as pilot:
+        state = GameState(caixa=1000, local_atual="isopor")  # nem o simples
+        saida: list = []
+        app.push_screen(CoolerScreen(state, Translator("ce"), obrigatorio=True),
+                        callback=saida.append)
+        await pilot.pause()
+        await pilot.click("#pular")   # "Vender de casa hoje"
+        await pilot.pause()
+        assert saida == [None]
+
+
+async def test_cooler_obrigatorio_com_dinheiro_nao_tem_atalho():
+    """Com caixa pra comprar, a unica saida e comprar mesmo."""
+    from textual.app import App
+
+    from dindin.i18n import Translator
+    from dindin.sim.state import GameState
+    from dindin.ui.screens.cooler import CoolerScreen
+
+    class Host(App[None]):
+        pass
+
+    app = Host()
+    async with app.run_test(size=TAMANHO) as pilot:
+        state = GameState(caixa=10000, local_atual="isopor")
+        app.push_screen(CoolerScreen(state, Translator("ce"), obrigatorio=True))
+        await pilot.pause()
+        assert not app.screen.query("#pular")
+
+
 @pytest.mark.parametrize("regiao", REGIOES_I18N)
 async def test_cada_regiao_inicia_o_jogo_sem_texto_faltando(regiao):
     """Nenhuma tela pode mostrar o marcador de traducao faltando."""

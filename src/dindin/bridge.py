@@ -15,7 +15,9 @@ from .content.ingredients import INSUMOS, insumos_disponiveis
 from .content.locations import LOCAIS, ORDEM_LOCAIS, UPGRADES
 from .content.regions import ORDEM_REGIOES, REGIOES
 from .i18n import REGIOES_I18N, Translator, money
+from .i18n.barks import pool
 from .i18n.base_ptbr import BASE
+from .sim.types import BarkTag
 from .sim import economy, progression
 from .sim.demand import f_preco, tolerancia_efetiva
 from .sim.engine import advance_day, clima_do_dia, tolerancia_efetiva_do_dia
@@ -48,6 +50,7 @@ def estado_para_json(state: GameState) -> dict:
         "local_atual": state.local_atual,
         "locais_desbloqueados": list(state.locais_desbloqueados),
         "capacidade_freezer": capacidade_total(state),
+        "capacidade_freezer_base": state.capacidade_freezer,
         "capacidade_dia": capacidade_dia(state, state.local_atual),
         "upgrades": sorted(state.upgrades),
         "encerrado": state.encerrado,
@@ -57,21 +60,38 @@ def estado_para_json(state: GameState) -> dict:
                 for k in state.inventario.ingredientes
                 if state.inventario.total(k) > 0
             },
+            # Lotes com validade: sem eles, insumo nunca venceria no navegador.
+            "lotes": {
+                k: [[round(l.qtd, 3), l.dia_validade] for l in lotes if l.qtd > 0]
+                for k, lotes in state.inventario.ingredientes.items()
+                if any(l.qtd > 0 for l in lotes)
+            },
             "prontos": dict(state.inventario.prontos),
         },
         "vendas_recentes": dict(state.vendas_recentes),
+        "socorro_usado": state.socorro_usado,
         "isopor": state.isopor,
         "isopor_dias": state.isopor_dias,
     }
 
 
 def estado_de_json(d: dict) -> GameState:
+    inv_json = d.get("inventario", {})
+    lotes = inv_json.get("lotes")
+    if lotes:
+        ingredientes = {
+            k: [Lote(float(qtd), val) for qtd, val in ls]
+            for k, ls in lotes.items() if ls
+        }
+    else:
+        # Estado antigo (sem lotes): totais viram lote unico sem validade.
+        ingredientes = {
+            k: [Lote(float(v), None)]
+            for k, v in inv_json.get("ingredientes", {}).items()
+        }
     inv = Inventory(
-        ingredientes={
-            k: [Lote(float(v), None)] for k, v in
-            d.get("inventario", {}).get("ingredientes", {}).items()
-        },
-        prontos=dict(d.get("inventario", {}).get("prontos", {})),
+        ingredientes=ingredientes,
+        prontos=dict(inv_json.get("prontos", {})),
     )
     return GameState(
         seed=d["seed"], regiao=d["regiao"], dia=d["dia"], caixa=d["caixa"],
@@ -81,6 +101,7 @@ def estado_de_json(d: dict) -> GameState:
         capacidade_freezer=d.get("capacidade_freezer_base", 60),
         upgrades=set(d.get("upgrades", [])),
         vendas_recentes=dict(d.get("vendas_recentes", {})),
+        socorro_usado=bool(d.get("socorro_usado", False)),
         isopor=d.get("isopor"),
         isopor_dias=d.get("isopor_dias", 0),
         encerrado=d.get("encerrado"),
@@ -100,6 +121,8 @@ def catalogo(regiao: str, desbloqueados: list | None = None) -> dict:
     return {
         "regiao": regiao,
         "textos": {k: tr.t(k) for k in BASE},
+        # Falas regionais: sem elas o navegador falaria pt-BR neutro.
+        "barks": {tag.value: pool(regiao, tag) for tag in BarkTag},
         "produto": {"sing": tr.produto, "plur": tr.t("produto.plur")},
         "insumos": [
             {
@@ -212,6 +235,9 @@ def info_do_gelo(estado: dict, unidades: int) -> dict:
     from .sim.freezer import cobertura_do_saco
 
     state = estado_de_json(estado)
+    # O que passa da capacidade do dia nem chega ao ponto -- gelo pra isso
+    # seria dinheiro jogado fora. Mesma conta do engine (disponivel_hoje).
+    unidades = min(int(unidades), capacidade_dia(state, state.local_atual))
     clima = clima_do_dia(state, state.dia)
     cobertura = cobertura_do_saco(clima.heat_index)
     preco = INSUMOS["gelo"].preco_unitario(
@@ -325,6 +351,15 @@ def jogar_dia(estado: dict, plano: dict) -> dict:
     """Roda um dia. Recebe e devolve JSON puro."""
     state = estado_de_json(estado)
 
+    # Mesma regra da TUI: o dia acontece no ponto mais avancado que ja e do
+    # jogador (voltar e de graca) -- senao quem cai pro socorro fica preso em
+    # casa pra sempre. Sem isopor vivo o dia roda de casa, mas o ponto
+    # continua sendo dele: e o que mantem a vitrine de isopor na tela.
+    state.local_atual = progression.melhor_local(state)
+    local_do_dia = state.local_atual
+    if progression.precisa_de_isopor(state):
+        local_do_dia = "casa"
+
     gasto = 0
     if plano.get("compras"):
         gasto = economy.comprar(state, plano["compras"])
@@ -334,7 +369,7 @@ def jogar_dia(estado: dict, plano: dict) -> dict:
     gelo = int(plano.get("gelo", 0))
     day_plan = DayPlan(
         producao={}, precos=plano.get("precos", {}),
-        local=state.local_atual, compras={}, gelo=gelo,
+        local=local_do_dia, compras={}, gelo=gelo,
     )
     resultado = advance_day(state, day_plan, gasto_previo=gasto)
 

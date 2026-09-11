@@ -54,7 +54,7 @@ class KitchenScreen(Screen[dict]):
                 money(custo_unitario(f.key, self.state.regiao)),
                 str(self.state.inventario.prontos.get(f.key, 0)),
                 str(pode_produzir_com_reserva(self.state, f.key, self.producao)),
-                str(self.producao.get(f.key, 0)) or "-",
+                str(self.producao[f.key]) if self.producao.get(f.key) else "-",
                 key=f.key,
             )
         if linha < t.row_count:

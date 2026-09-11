@@ -65,7 +65,9 @@ class ReportScreen(Screen[None]):
             queria = (f"[yellow]{f.demanda_potencial}[/]" if faltou
                       else str(f.demanda_potencial))
             t.add_row(SABORES[f.flavor].nome, str(f.ofertados), str(f.vendidos),
-                      queria, str(f.perdidos_derretimento) or "-", money(f.receita))
+                      queria,
+                      str(f.perdidos_derretimento) if f.perdidos_derretimento else "-",
+                      money(f.receita))
 
         self.query_one("#t-receita", StatTile).atualizar(money(r.receita))
         self.query_one("#t-custos", StatTile).atualizar(

@@ -129,9 +129,10 @@ def rodar(regiao: str, seed: int, politica) -> tuple[str, int, int]:
     for _ in range(MAX_DIAS):
         if s.encerrado:
             break
+        s.local_atual = progression.melhor_local(s)  # volta de graca ao ponto
         _cuidar_do_isopor(s)
         if progression.precisa_de_isopor(s):
-            s.local_atual = "casa"   # sem caixa, volta pra casa
+            s.local_atual = "casa"   # sem caixa, vende de casa hoje
         advance_day(s, politica(s))
         # Sobe de ponto sempre que da. `pode_desbloquear` so responde pro
         # ponto ainda trancado -- se ele ja foi liberado antes e o jogador

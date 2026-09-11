@@ -12,6 +12,15 @@ CAIXA_MINIMO_VIVO: Centavos = 500
 AJUDA_RECOMECO: Centavos = 8000
 
 
+def melhor_local(state: GameState) -> str:
+    """O ponto mais avancado ja desbloqueado.
+
+    Quem caiu pra casa (socorro, ou isopor rachado sem dinheiro) volta por
+    aqui sem pagar entrada de novo -- o ponto ja e dele.
+    """
+    return max(state.locais_desbloqueados, key=lambda k: LOCAIS[k].ordem)
+
+
 def proximo_local(state: GameState) -> str | None:
     atual = LOCAIS[state.local_atual]
     for key in ORDEM_LOCAIS:
