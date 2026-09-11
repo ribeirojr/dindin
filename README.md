@@ -152,3 +152,10 @@ O `tools/balance_sim.py` roda duas políticas automáticas (um jogador
 competente e um no automático) em várias sementes. Hoje o competente fecha a
 campanha em 38–56 dias e o ingênuo em ~70 — ou seja, jogar bem compensa, mas
 jogar mal não te elimina.
+
+## Licença
+
+© 2026 Moises Ribeiro Jr — software livre sob a
+[GPL-3.0-or-later](LICENSE): use, estude, modifique e redistribua à vontade,
+desde que as melhorias continuem livres. Jogue a versão web em
+<https://ribeirojr.github.io/dindin/>.

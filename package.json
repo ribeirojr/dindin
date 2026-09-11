@@ -1,6 +1,7 @@
 {
   "name": "dindin-web",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "build": "uv run python tools/build_web.py",

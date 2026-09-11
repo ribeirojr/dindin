@@ -3,6 +3,8 @@ name = "dindin"
 version = "0.1.0"
 description = "Jogo de simulacao: venda de dindin pelo Brasil"
 readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.14"
 dependencies = ["textual>=8.2.8"]
 
