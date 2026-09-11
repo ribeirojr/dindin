@@ -192,6 +192,7 @@ BASE: dict[str, str] = {
     "feira.falta": "Falta {v} — tire alguma coisa do carrinho.",
     "feira.resumo": "Compra: {c} · sobra {s}",
     "cozinha.pronto_curto": "Pronto",
+    "cozinha.maximo_curto": "Máx.",
     "cozinha.pra10": "Pra fazer 10 {plur}:",
     "cozinha.tem": "(tem {n})",
     "cozinha.falta": "Falta comprar: {lista}",

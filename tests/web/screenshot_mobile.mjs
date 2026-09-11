@@ -4,6 +4,12 @@
  * Precisa do Chrome instalado; sobe o proprio Chrome headless com
  * --remote-debugging-port e conversa via DevTools Protocol.
  * Gera: 1-splash, 2-dia (feira/cozinha/preco), 3-relatorio.
+ *
+ * Roda em 375px (iPhone SE/13-mini) E 320px (o celular mais estreito que
+ * ainda importa) -- um bug real (steppers vazando da tabela, tooltip da
+ * receita ilegivel fora da tela) so aparecia abaixo de 375px e so com o
+ * tooltip de fato aberto. Testar so a largura maior, ou so o overflow
+ * sem interagir com nada, deixava passar.
  */
 import { spawn, execSync } from "node:child_process";
 import { writeFileSync, mkdtempSync } from "node:fs";
@@ -52,22 +58,6 @@ const cdp = (method, params = {}) => new Promise((resolve, reject) => {
 const js = async (expr) =>
   (await cdp("Runtime.evaluate", { expression: expr, returnByValue: true })).result.value;
 
-// iPhone SE/13-mini: o menor viewport que ainda importa.
-await cdp("Emulation.setDeviceMetricsOverride",
-          { width: 375, height: 812, deviceScaleFactor: 2, mobile: true });
-await cdp("Emulation.setTouchEmulationEnabled", { enabled: true });
-await cdp("Page.enable");
-await cdp("Page.navigate", { url: URL_JOGO });
-
-// Espera o Pyodide carregar e a tela de regioes aparecer.
-for (let i = 0; i < 120; i++) {
-  await espera(500);
-  if (await js("!!document.querySelector('.regiao')")) break;
-}
-if (!(await js("!!document.querySelector('.regiao')"))) {
-  console.error("o jogo nao carregou (Pyodide?)"); process.exit(1);
-}
-
 const foto = async (nome) => {
   const { data } = await cdp("Page.captureScreenshot", { format: "png" });
   writeFileSync(join(DIR, nome), Buffer.from(data, "base64"));
@@ -78,37 +68,64 @@ const foto = async (nome) => {
 };
 
 let vazou = 0;
-vazou += await foto("mobile-1-splash.png");
 
-// Entra no Para e fotografa o dia (feira/cozinha no topo).
-await js("[...document.querySelectorAll('.regiao')].find(c=>c.textContent.includes('chup-chup')).click()");
-await espera(800);
-vazou += await foto("mobile-2-dia.png");
+// 375 = iPhone SE/13-mini; 320 = o celular mais estreito que ainda
+// importa (Android antigo/pequeno). O bug real so aparecia em 320.
+for (const W of [375, 320]) {
+  await cdp("Emulation.setDeviceMetricsOverride",
+            { width: W, height: 812, deviceScaleFactor: 2, mobile: true });
+  await cdp("Emulation.setTouchEmulationEnabled", { enabled: true });
+  await cdp("Page.enable");
+  await cdp("Page.navigate", { url: URL_JOGO });
 
-// Compra, produz e vende pra chegar no relatorio.
-await js(`
-  const clicar = (nome, vezes) => {
-    const tr = [...document.querySelectorAll("tr")]
-      .find(r => r.textContent.includes(nome) && r.querySelector(".passo"));
+  // Espera o Pyodide carregar e a tela de regioes aparecer.
+  for (let i = 0; i < 120; i++) {
+    await espera(500);
+    if (await js("!!document.querySelector('.regiao')")) break;
+  }
+  if (!(await js("!!document.querySelector('.regiao')"))) {
+    console.error("o jogo nao carregou (Pyodide?)"); process.exit(1);
+  }
+
+  vazou += await foto(`mobile-w${W}-1-splash.png`);
+
+  // Entra no Para e fotografa o dia (feira/cozinha no topo).
+  await js("[...document.querySelectorAll('.regiao')].find(c=>c.textContent.includes('chup-chup')).click()");
+  await espera(800);
+  vazou += await foto(`mobile-w${W}-2-dia.png`);
+
+  // Abre o tooltip da receita: e onde o vazamento de verdade morava --
+  // um painel de 256px ancorado no icone "?" perto da borda esquerda.
+  await js("document.querySelector('#corpo-cozinha .ajuda')?.click()");
+  await espera(200);
+  vazou += await foto(`mobile-w${W}-2b-tooltip.png`);
+  await js("document.querySelector('#corpo-cozinha .ajuda')?.click()");  // fecha
+
+  // Compra, produz e vende pra chegar no relatorio.
+  await js(`
+    const clicar = (nome, vezes) => {
+      const tr = [...document.querySelectorAll("tr")]
+        .find(r => r.textContent.includes(nome) && r.querySelector(".passo"));
+      const mais = tr.querySelectorAll(".passo button")[1];
+      for (let i = 0; i < vezes; i++) mais.click();
+    };
+    clicar("Polpa", 3); clicar("Açúcar", 1); clicar("Saquinho", 1);
+  `);
+  await espera(400);
+  await js(`
+    const tr = [...document.querySelectorAll("#corpo-cozinha tr")][0];
     const mais = tr.querySelectorAll(".passo button")[1];
-    for (let i = 0; i < vezes; i++) mais.click();
-  };
-  clicar("Polpa", 3); clicar("Açúcar", 1); clicar("Saquinho", 1);
-`);
-await espera(400);
-await js(`
-  const tr = [...document.querySelectorAll("#corpo-cozinha tr")][0];
-  const mais = tr.querySelectorAll(".passo button")[1];
-  for (let i = 0; i < 8; i++) mais.click();
-`);
-await espera(400);
-await js("[...document.querySelectorAll('button')].find(b=>/Vender!|Sell!/.test(b.textContent)).click()");
-await espera(800);
-vazou += await foto("mobile-3-relatorio.png");
+    for (let i = 0; i < 8; i++) mais.click();
+  `);
+  await espera(400);
+  await js("[...document.querySelectorAll('button')].find(b=>/Vender!|Sell!/.test(b.textContent)).click()");
+  await espera(800);
+  vazou += await foto(`mobile-w${W}-3-relatorio.png`);
+}
 
 ws.close(); chrome.kill();
 await espera(800);   // o Chrome ainda grava cache ao morrer; espera antes de varrer
 try { execSync(`rm -rf ${JSON.stringify(perfil)} 2>/dev/null`); } catch {}
 
 if (vazou > 0) { console.log("FALHOU: tem vazamento horizontal"); process.exit(1); }
-console.log("VIEWPORT 375px SEM VAZAMENTO ✓");
+console.log("VIEWPORT 320-375px SEM VAZAMENTO ✓");

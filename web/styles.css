@@ -341,9 +341,42 @@ button.sugestao {
  * botao de 44px nao cabe. Aqui tudo encolhe e as colunas redundantes saem:
  * a unidade vive no tooltip da receita e o custo reaparece no cartao de preco.
  */
+
+/* O balao da receita e ancorado no "?" (absolute + left/right relativo a
+ * ele). Isso funciona numa tela larga porque sempre sobra espaco dos dois
+ * lados -- mas numa tela de 320-480px o "?" pode estar perto de qualquer
+ * borda (o nome do sabor antes dele varia de tamanho linha a linha), e um
+ * balao de 256px ancorado nele vaza pra fora da tela e fica ilegivel.
+ * Solucao: abaixo de 560px o balao vira um paines fixo, centralizado na
+ * tela, independente de onde o "?" esta -- sempre cabe, sempre legivel. */
+@media (max-width: 560px) {
+  .ajuda .balao,
+  td:first-child .ajuda .balao {
+    position: fixed; left: 50%; right: auto; bottom: auto;
+    top: 50%; transform: translate(-50%, -50%) scale(.96);
+    width: calc(100vw - 48px); max-width: 340px;
+  }
+  .ajuda:hover .balao, .ajuda:focus .balao, .ajuda.aberta .balao,
+  td:first-child .ajuda:hover .balao, td:first-child .ajuda:focus .balao {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  /* a setinha so faz sentido grudada no icone; num painel centralizado
+   * ela apontaria pro nada. */
+  .ajuda .balao::after { display: none; }
+  /* o painel cobre a tela: um toque fora dele tem que fechar (o handler
+   * em app.js ja fecha toda .aberta ao clicar fora, isso so da o fundo). */
+  .ajuda.aberta::before {
+    content: ""; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    z-index: 19;
+  }
+}
+
 .slider-linha { flex-wrap: wrap; }
 input[type=range] { min-width: 140px; }
-.ajuda .balao { max-width: min(260px, calc(100vw - 32px)); }
+
+/* Cabecalho de tabela com par cheio/curto (ver rotuloCurto em app.js):
+ * por padrao so o cheio aparece: o curto so entra abaixo de 480px. */
+.rotulo-curto { display: none; }
 
 @media (max-width: 480px) {
   #app { padding: 10px; }
@@ -354,15 +387,28 @@ input[type=range] { min-width: 140px; }
   .stat b { font-size: 14px; }
   .stat span { font-size: 10px; }
 
-  table { font-size: 13px; }
-  th { padding: 6px 3px; font-size: 10px; letter-spacing: .02em; }
-  td { padding: 7px 3px; }
-  .passo { gap: 3px; padding: 2px; }
-  .passo button { width: 40px; height: 40px; font-size: 18px; }
-  .passo .v { min-width: 28px; font-size: 14px; }
+  table { font-size: 13px; width: 100%; }
+  th { padding: 6px 3px; font-size: 10px; letter-spacing: .02em;
+       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td { padding: 7px 3px; overflow-wrap: break-word; }
+  .rotulo-cheio { display: none; }
+  .rotulo-curto { display: inline; }
+  /* Steppers precisam de largura garantida -- flex sem isso encolhia o
+   * "+" pra fora da celula quando o layout ficava apertado (320px). */
+  .passo { gap: 2px; padding: 2px; justify-content: center; }
+  .passo button { width: 30px; height: 32px; font-size: 15px; flex: none; }
+  .passo .v { min-width: 16px; font-size: 13px; flex: none; }
+  /* Nome do insumo/sabor precisa de espaco pra nao quebrar em 3 linhas;
+   * a coluna dos steppers ganha largura fixa suficiente pro trio -/n/+;
+   * as colunas numericas do meio dividem o que sobra (table-layout: auto,
+   * o padrao). */
+  .tab-feira td:first-child, .tab-cozinha td:first-child { max-width: 40vw; }
+  .tab-feira th:last-child, .tab-feira td:last-child,
+  .tab-cozinha th:last-child, .tab-cozinha td:last-child {
+    width: 108px; white-space: nowrap; }
   .tab-feira th:nth-child(2), .tab-feira td:nth-child(2) { display: none; }
   .tab-cozinha th:nth-child(2), .tab-cozinha td:nth-child(2) { display: none; }
-  .tab-rel { font-size: 12px; }
+  .tab-rel { font-size: 11px; }
   .tab-rel th, .tab-rel td { padding: 5px 2px; }
 
   .clima .icone { font-size: 36px; }

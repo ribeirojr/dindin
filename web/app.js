@@ -77,6 +77,12 @@ const t = (k, vars) => {
   return s;
 };
 
+/** Cabecalho de tabela com versao curta pro celular (evita quebra feia
+ * de titulos como "Dá pra fazer" numa coluna estreita). CSS troca qual
+ * das duas aparece por largura de tela. */
+const rotuloCurto = (cheio, curto) =>
+  `<span class="rotulo-cheio">${cheio}</span><span class="rotulo-curto">${curto}</span>`;
+
 // ------------------------------------------------------------------ boot
 /* No celular nao existe :hover, e o :focus em <span> e inconsistente no
  * iOS. Um toque no "?" alterna a classe .aberta; tocar fora fecha. */
@@ -379,7 +385,7 @@ function cartaoCozinha() {
   const tab = el("table", "tab-cozinha");
   tab.innerHTML = `<thead><tr><th>${t("cozinha.sabor")}</th>
     <th class="num">${t("preco.custo")}</th>
-    <th class="num">${t("cozinha.maximo")}</th>
+    <th class="num">${rotuloCurto(t("cozinha.maximo"), t("cozinha.maximo_curto"))}</th>
     <th class="num">${t("cozinha.pronto_curto")}</th>
     <th>${t("cozinha.produzir")}</th></tr></thead>`;
   tab.append(el("tbody", null, ""));

@@ -197,6 +197,7 @@ BASE_EN: dict[str, str] = {
     "feira.falta": "Short {v} — take something out of the cart.",
     "feira.resumo": "Total: {c} · {s} left over",
     "cozinha.pronto_curto": "Ready",
+    "cozinha.maximo_curto": "Max",
     "cozinha.pra10": "To make 10 {plur}:",
     "cozinha.tem": "(have {n})",
     "cozinha.falta": "Still need: {lista}",
