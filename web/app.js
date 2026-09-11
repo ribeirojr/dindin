@@ -320,7 +320,7 @@ function cartaoFeira() {
   const c = el("div", "cartao");
   c.append(el("h2", null, tit(t("feira.titulo"))));
   c.append(el("p", "sub", t("feira.desconto")));
-  const tab = el("table");
+  const tab = el("table", "tab-feira");
   tab.innerHTML = `<thead><tr><th>${t("feira.insumo")}</th><th>${t("feira.unidade")}</th>
     <th class="num">${t("feira.preco")}</th><th class="num">${t("feira.tem")}</th>
     <th>${t("feira.levar")}</th></tr></thead>`;
@@ -376,7 +376,7 @@ function cartaoCozinha() {
   const c = el("div", "cartao");
   c.append(el("h2", null, tit(t("cozinha.titulo"))));
   c.append(el("p", "sub", t("cozinha.subtitulo")));
-  const tab = el("table");
+  const tab = el("table", "tab-cozinha");
   tab.innerHTML = `<thead><tr><th>${t("cozinha.sabor")}</th>
     <th class="num">${t("preco.custo")}</th>
     <th class="num">${t("cozinha.maximo")}</th>
@@ -698,7 +698,7 @@ function telaRelatorio(r, desbloqueou) {
     c.append(ev);
   }
 
-  const tab = el("table");
+  const tab = el("table", "tab-rel");
   tab.innerHTML = `<thead><tr><th>${t("rel.sabor")}</th>
     <th class="num">${t("rel.levou")}</th>
     <th class="num">${t("rel.vendeu")}</th>

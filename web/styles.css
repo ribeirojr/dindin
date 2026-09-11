@@ -335,3 +335,53 @@ button.sugestao {
 .lang-chip.ativa {
   border-color: var(--amarelo); color: var(--amarelo); font-weight: 700;
 }
+
+/* ---------- telas pequenas (celular) ----------
+ * O layout de 960px afogava um celular de 360px: tabela de 5 colunas com
+ * botao de 44px nao cabe. Aqui tudo encolhe e as colunas redundantes saem:
+ * a unidade vive no tooltip da receita e o custo reaparece no cartao de preco.
+ */
+.slider-linha { flex-wrap: wrap; }
+input[type=range] { min-width: 140px; }
+.ajuda .balao { max-width: min(260px, calc(100vw - 32px)); }
+
+@media (max-width: 480px) {
+  #app { padding: 10px; }
+  .cartao { padding: 12px; margin-bottom: 10px; border-radius: 12px; }
+  .cartao h2 { font-size: 16px; }
+  header { padding: 10px 12px; gap: 8px; margin-bottom: 10px; }
+  header .marca { font-size: 15px; }
+  .stat b { font-size: 14px; }
+  .stat span { font-size: 10px; }
+
+  table { font-size: 13px; }
+  th { padding: 6px 3px; font-size: 10px; letter-spacing: .02em; }
+  td { padding: 7px 3px; }
+  .passo { gap: 3px; padding: 2px; }
+  .passo button { width: 40px; height: 40px; font-size: 18px; }
+  .passo .v { min-width: 28px; font-size: 14px; }
+  .tab-feira th:nth-child(2), .tab-feira td:nth-child(2) { display: none; }
+  .tab-cozinha th:nth-child(2), .tab-cozinha td:nth-child(2) { display: none; }
+  .tab-rel { font-size: 12px; }
+  .tab-rel th, .tab-rel td { padding: 5px 2px; }
+
+  .clima .icone { font-size: 36px; }
+  .clima .temp { font-size: 22px; }
+  .tiles { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tile { padding: 10px; }
+  .tile b { font-size: 16px; }
+  .isopor-atual { gap: 12px; padding: 10px 12px; }
+  .isopor-atual b { font-size: 15px; }
+  .gelo-topo { gap: 12px; }
+  .gelo-topo b { font-size: 16px; }
+  .gelo-rotulo b { font-size: 17px; }
+  .grafico-caixa { padding: 8px; }
+
+  /* Botao de acao na largura do polegar. */
+  .linha-acoes button.principal,
+  .linha-acoes button.secundaria { width: 100%; }
+  .lang-picker { justify-content: center; }
+  .regiao { padding: 12px; }
+  .regiao .produto { font-size: 19px; }
+  .bench { display: none; }  /* curiosidade de dev, nao cabe no bolso */
+}

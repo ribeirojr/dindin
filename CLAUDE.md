@@ -13,6 +13,8 @@ node tests/web/dom_test.mjs          # web UI in a real DOM (jsdom + real Pyodid
 node tests/web/isopor_gelo_test.mjs  # web cooler/ice flow
 uv run dindin                        # play the TUI
 uv run python tools/serve_web.py     # serve web version on the LAN
+node tests/web/screenshot_mobile.mjs # real-Chrome 375px screenshots + overflow check
+                                     # (needs Chrome and serve_web running on :8899)
 uv run python tools/balance_sim.py   # balance harness (auto-players over many seeds)
 ```
 
