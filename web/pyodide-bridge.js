@@ -23,7 +23,7 @@ const MODULOS = [
   "content/__init__.py", "content/regions.py", "content/flavors.py",
   "content/ingredients.py", "content/locations.py", "content/event_pool.py",
   "content/coolers.py",
-  "i18n/__init__.py", "i18n/base_ptbr.py", "i18n/barks.py",
+  "i18n/__init__.py", "i18n/base_ptbr.py", "i18n/base_en.py", "i18n/barks.py",
   "i18n/overrides/__init__.py", "i18n/overrides/ce.py", "i18n/overrides/rj.py",
   "i18n/overrides/mg.py", "i18n/overrides/sp.py", "i18n/overrides/rs.py",
   "i18n/overrides/pa.py",
@@ -110,17 +110,21 @@ if "/jogo" not in sys.path:
     return py;
   }
 
-  regioes() { return this._call("regioes"); }
-  catalogo(regiao, desbloqueados) { return this._call("catalogo", regiao, desbloqueados ?? null); }
+  regioes(lang) { return this._call("regioes", lang ?? "pt"); }
+  textosBase(lang) { return this._call("textos_base", lang ?? "pt"); }
+  catalogo(regiao, desbloqueados, lang) {
+    return this._call("catalogo", regiao, desbloqueados ?? null, lang ?? "pt");
+  }
   novoJogo(regiao, seed) { return this._call("novo_jogo", regiao, seed); }
   previsao(estado) { return this._call("previsao", estado); }
-  sabores(estado, carrinho, producao) {
-    return this._call("sabores_do_jogador", estado, carrinho ?? {}, producao ?? {});
+  sabores(estado, carrinho, producao, lang) {
+    return this._call("sabores_do_jogador", estado, carrinho ?? {},
+                      producao ?? {}, lang ?? "pt");
   }
   curvaDePreco(estado, flavor) { return this._call("curva_de_preco", estado, flavor); }
   jogarDia(estado, plano) { return this._call("jogar_dia", estado, plano); }
   mudarDePonto(estado, local) { return this._call("mudar_de_ponto", estado, local); }
-  isopores(estado) { return this._call("isopores", estado); }
+  isopores(estado, lang) { return this._call("isopores", estado, lang ?? "pt"); }
   comprarIsopor(estado, key) { return this._call("comprar_isopor", estado, key); }
   infoDoGelo(estado, unidades) { return this._call("info_do_gelo", estado, unidades); }
 

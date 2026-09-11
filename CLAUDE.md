@@ -52,6 +52,14 @@ tools/          build_web.py, serve_web.py, balance_sim.py.
    `"evento.chuva_das_duas"`; the UI translates via `Translator.t()`. New keys
    go in `i18n/base_ptbr.py`; regional flavor goes in `i18n/overrides/<uf>.py`
    (only keys that exist in BASE — a test enforces this).
+   **Every new BASE key needs its English twin in `i18n/base_en.py`**
+   (`tests/i18n/test_en.py` enforces exact key parity). The web UI supports
+   `lang="pt"|"en"` (picker on the splash, `?lang=en` in the URL); the TUI is
+   pt-only. Regional product names (dindin, sacolé…) and street slang are
+   diegetic — never translate them. Content names (flavors, ingredients,
+   coolers) resolve via `sabor.<key>` / `insumo.<key>` / `isopor.nome.<key>`
+   keys: pt is auto-generated from `content/`, EN is written by hand.
+   No hardcoded user-facing strings in `web/app.js` — always `t()`.
 6. **New file under `sim/`, `content/`, or `i18n/`?** Add it to `MODULOS` in
    `web/pyodide-bridge.js`. `tests/test_web_bundle.py` fails if you forget —
    without it the browser 404s at runtime.

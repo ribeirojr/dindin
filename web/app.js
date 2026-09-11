@@ -51,14 +51,6 @@ const CENAS = {
      ◯           ◯`,
 };
 
-const DICAS_PONTO = {
-  casa: "Comece pequeno: faça poucos e veja quantos a vizinhança quer.",
-  isopor: "Na rua o movimento é bem maior — mas chuva esvazia a calçada.",
-  praia: "Praia paga mais caro e adora cremoso. Só que chuva aqui é fatal.",
-  escola: "Criança tem pouco dinheiro: aqui o barato vende, o gourmet encalha.",
-  carrinho: "Seu ponto, suas regras. Olhe a previsão e escolha o dia certo.",
-};
-
 const ICONE = {
   escaldante: "🔥", quente: "☀️", abafado: "🥵",
   nublado: "☁️", chuva: "🌧️", temporal: "⛈️", frio: "🥶",
@@ -66,6 +58,8 @@ const ICONE = {
 
 let estado = null, catalogo = null, carrinho = {}, producao = {},
     precos = {}, tempos = null, saboresDoDia = [];
+// Idioma da interface. Nome do produto e girias ficam regionais sempre.
+let lang = new URLSearchParams(location.search).get("lang") === "en" ? "en" : "pt";
 // null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
 let gelo = null;
 // Contador de passos do dia: cartoes aparecem/somem conforme o local.
@@ -112,14 +106,33 @@ async function boot() {
 
 // ------------------------------------------------------------------ telas
 function telaRegioes() {
-  const regioes = eng.regioes();
+  // Textos neutros (sem sotaque regional) so pra tela de escolha.
+  catalogo = { textos: eng.textosBase(lang) };
+  const regioes = eng.regioes(lang);
   const app = $("#app");
   app.innerHTML = "";
 
   const c = el("div", "cartao");
-  c.append(el("h2", null, "De onde você é?"));
-  c.append(el("p", "sub",
-    "O doce muda de nome em cada estado — e o clima, o gosto e o preço mudam junto."));
+
+  // O seletor de idioma: unico texto bilingue fixo da tela.
+  const picker = el("div", "lang-picker");
+  for (const [codigo, rotulo] of [["pt", "Português"], ["en", "English"]]) {
+    const chip = el("button", "lang-chip" + (lang === codigo ? " ativa" : ""),
+                    rotulo);
+    chip.onclick = () => {
+      if (lang === codigo) return;
+      lang = codigo;
+      const url = new URLSearchParams(location.search);
+      if (lang === "en") url.set("lang", "en"); else url.delete("lang");
+      history.replaceState({}, "", url.size ? `?${url}` : location.pathname);
+      telaRegioes();
+    };
+    picker.append(chip);
+  }
+  c.append(picker);
+
+  c.append(el("h2", null, t("ui.escolha_regiao")));
+  c.append(el("p", "sub", t("regiao.subtitulo")));
 
   const grade = el("div", "grade-regioes");
   for (const r of regioes) {
@@ -128,7 +141,7 @@ function telaRegioes() {
       `<div class="produto">${r.produto}</div>
        <div class="uf">${r.nome} · ${r.gentilico}</div>
        <div class="giria">"${r.giria.join('", "')}"</div>
-       <div class="favs">Sai muito: ${r.favoritos.map((f) => f.nome).join(", ")}</div>`;
+       <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>`;
     b.onclick = () => comecar(r.key);
     grade.append(b);
   }
@@ -142,8 +155,9 @@ function comecar(regiao) {
             || Math.floor(Math.random() * 1e6);
   estado = eng.novoJogo(regiao, seed);
   // Catalogo filtrado pelo progresso: dia 1 abre so 3 sabores.
-  catalogo = eng.catalogo(regiao, estado.locais_desbloqueados);
-  history.replaceState({}, "", `?r=${regiao}&seed=${seed}`);
+  catalogo = eng.catalogo(regiao, estado.locais_desbloqueados, lang);
+  history.replaceState({}, "",
+    `?r=${regiao}&seed=${seed}${lang === "en" ? "&lang=en" : ""}`);
   telaDia();
 }
 
@@ -156,10 +170,10 @@ function cabecalho() {
     d.append(el("b", null, val), el("span", null, rot));
     s.append(d);
   };
-  add("Dia", estado.dia);
-  add("Caixa", money(estado.caixa));
-  add("Fama", Math.round(estado.reputacao));
-  add("Ponto", t(`local.${estado.local_atual}`));
+  add(t("ui.dia"), estado.dia);
+  add(t("ui.caixa"), money(estado.caixa));
+  add(t("ui.fama"), Math.round(estado.reputacao));
+  add(t("ui.ponto"), t(`local.${estado.local_atual}`));
   h.append(s);
   return h;
 }
@@ -167,7 +181,7 @@ function cabecalho() {
 function telaDia() {
   const clima = eng.previsao(estado);
   carrinho = {}; producao = {}; precos = {}; gelo = null; passoN = 0;
-  saboresDoDia = eng.sabores(estado, {}, {});
+  saboresDoDia = eng.sabores(estado, {}, {}, lang);
 
   const app = $("#app");
   app.innerHTML = "";
@@ -176,8 +190,8 @@ function telaDia() {
   // --- plano do dia: onde voce esta + como esta o tempo
   const pl = el("div", "cartao");
   pl.append(el("h2", null,
-    `Dia ${estado.dia} · ${t("local." + estado.local_atual)}`));
-  pl.append(el("p", "sub", "Antes de começar: veja como está o dia."));
+    `${t("ui.dia")} ${estado.dia} · ${t("local." + estado.local_atual)}`));
+  pl.append(el("p", "sub", t("ui.antes")));
   const plGrid = el("div", "plano-grid");
   const cena = el("pre", "cena");
   cena.textContent = CENAS[estado.local_atual] ?? CENAS.casa;
@@ -185,26 +199,27 @@ function telaDia() {
   const falta = Math.max(0, local0.meta - estado.caixa);
   const resumo = el("div", "plano-resumo");
   resumo.innerHTML =
-    `<div><span>No caixa</span><b>${money(estado.caixa)}</b></div>
-     <div><span>Meta</span><b>${money(local0.meta)}</b>${falta
-       ? ` <i>faltam ${money(falta)}</i>` : ' <i class="ok">batida!</i>'}</div>
-     <div><span>Sabores</span><b>${catalogo.sabores.length}</b></div>
-     <div><span>Congelado</span><b>${
+    `<div><span>${t("ui.no_caixa")}</span><b>${money(estado.caixa)}</b></div>
+     <div><span>${t("ui.meta_curta")}</span><b>${money(local0.meta)}</b>${falta
+       ? ` <i>${t("ui.faltam", { v: money(falta) })}</i>`
+       : ` <i class="ok">${t("ui.meta_batida")}</i>`}</div>
+     <div><span>${t("ui.sabores")}</span><b>${catalogo.sabores.length}</b></div>
+     <div><span>${t("ui.congelado")}</span><b>${
        Object.values(estado.inventario.prontos ?? {}).reduce((a,b)=>a+b,0)}</b></div>`;
   plGrid.append(cena, resumo);
   pl.append(plGrid);
-  pl.append(el("div", "aviso", DICAS_PONTO[estado.local_atual] ?? ""));
+  pl.append(el("div", "aviso", t(`dica.${estado.local_atual}`)));
   app.append(pl);
 
   // --- clima
   const cc = el("div", "cartao");
-  cc.append(el("h2", null, "Previsão de hoje"));
+  cc.append(el("h2", null, t("ui.clima_amanha")));
   const cl = el("div", "clima");
   cl.innerHTML =
     `<div class="icone">${ICONE[clima.kind] ?? "☀️"}</div>
      <div>
        <div class="temp">${Math.round(clima.temp_c)}°C</div>
-       <div class="desc">${t("clima." + clima.kind)} · sensação ${Math.round(clima.heat_index)}°C</div>
+       <div class="desc">${t("clima." + clima.kind)} · ${t("clima.sensacao")} ${Math.round(clima.heat_index)}°C</div>
        <div class="dica" style="color:${dicaCor(clima)}">${dicaTexto(clima)}</div>
      </div>`;
   cc.append(cl);
@@ -226,7 +241,7 @@ function telaDia() {
   recarregarCozinha();
 
   const acoes = el("div", "linha-acoes");
-  const vender = el("button", "principal", "Vender! →");
+  const vender = el("button", "principal", t("ui.vender"));
   vender.onclick = rodarDia;
   acoes.append(vender);
   app.append(acoes);
@@ -238,12 +253,10 @@ function dicaCor(c) {
   return "#2fa84f";
 }
 function dicaTexto(c) {
-  if (c.kind === "temporal") return "Temporal. Quase ninguém na rua.";
-  if (c.kind === "chuva") return "Chuva. Movimento fraco.";
-  if (c.kind === "frio") return "Frio. Ninguém quer gelado.";
-  if (c.heat_index > 34) return "Calor forte! Vai vender muito — e dá pra cobrar mais.";
-  if (c.heat_index > 30) return "Movimento bom.";
-  return "Movimento normal.";
+  if (["temporal", "chuva", "frio"].includes(c.kind)) return t(`clima.dica.${c.kind}`);
+  if (c.heat_index > 34) return t("clima.dica.calorao");
+  if (c.heat_index > 30) return t("clima.dica.bom");
+  return t("clima.dica.normal");
 }
 
 /* ---------------------------------------------------------------- isopor
@@ -251,31 +264,30 @@ function dicaTexto(c) {
  * define capacidade e derretimento. Sem ele nao da pra vender na rua.
  */
 function cartaoIsopor() {
-  const info = eng.isopores(estado);
+  const info = eng.isopores(estado, lang);
   // Em casa o freezer resolve: nao precisa de isopor nem faz sentido mostrar.
   if (estado.local_atual === "casa" && !info.atual) return null;
 
   const c = el("div", "cartao");
-  c.append(el("h2", null, tit("Isopor")));
+  c.append(el("h2", null, tit(t("ui.isopor"))));
 
   if (info.atual && !info.precisa) {
     const atual = info.opcoes.find((o) => o.key === info.atual);
     const urgente = info.acabando ? " atencao" : "";
     const box = el("div", "isopor-atual" + urgente);
     box.innerHTML =
-      `<div><span>Em uso</span><b>${atual?.nome ?? info.atual}</b></div>
-       <div><span>Dura mais</span><b>${info.dias_restantes} dia${
-         info.dias_restantes === 1 ? "" : "s"}</b></div>
-       <div><span>Capacidade</span><b>${atual?.capacidade ?? "-"}</b></div>`;
+      `<div><span>${t("isopor.em_uso")}</span><b>${atual?.nome ?? info.atual}</b></div>
+       <div><span>${t("isopor.dura_mais")}</span><b>${
+         t("isopor.dias_valor", { n: info.dias_restantes })}</b></div>
+       <div><span>${t("isopor.capacidade")}</span><b>${atual?.capacidade ?? "-"}</b></div>`;
     c.append(box);
     if (info.acabando) {
-      c.append(el("div", "aviso", "O isopor ta no fim. Vale ja comprar outro."));
+      c.append(el("div", "aviso", t("isopor.acabando")));
     } else {
       return c;   // ainda bom: nao polui a tela com a vitrine
     }
   } else {
-    c.append(el("p", "sub",
-      "Sem isopor nao da pra vender na rua. Ele dura varios dias."));
+    c.append(el("p", "sub", t("isopor.precisa")));
   }
 
   const grade = el("div", "isopor-grade");
@@ -284,12 +296,12 @@ function cartaoIsopor() {
     card.innerHTML =
       `<b>${o.nome}</b>
        <div class="preco">${money(o.custo)}</div>
-       <div class="det">${o.dias} dias · cabe ${o.capacidade}</div>
-       <div class="det">${money(o.custo_por_dia)}/dia · derrete ${
-         Math.round(o.derretimento * 100)}%</div>
+       <div class="det">${t("isopor.det1", { dias: o.dias, cap: o.capacidade })}</div>
+       <div class="det">${t("isopor.det2", { custo: money(o.custo_por_dia),
+         pct: Math.round(o.derretimento * 100) })}</div>
        <div class="desc">${o.descricao}</div>`;
     const b = el("button", o.pode ? "" : "desligado",
-                 o.pode ? "Comprar" : "Falta dinheiro");
+                 o.pode ? t("ui.comprar") : t("ui.falta_dinheiro"));
     b.disabled = !o.pode;
     if (o.pode) {
       b.onclick = () => {
@@ -306,11 +318,12 @@ function cartaoIsopor() {
 
 function cartaoFeira() {
   const c = el("div", "cartao");
-  c.append(el("h2", null, tit("Feira")));
-  c.append(el("p", "sub", "Comprando em quantidade, sai mais barato."));
+  c.append(el("h2", null, tit(t("feira.titulo"))));
+  c.append(el("p", "sub", t("feira.desconto")));
   const tab = el("table");
-  tab.innerHTML = `<thead><tr><th>Insumo</th><th>Unid.</th>
-    <th class="num">Preço</th><th class="num">Tem</th><th>Levar</th></tr></thead>`;
+  tab.innerHTML = `<thead><tr><th>${t("feira.insumo")}</th><th>${t("feira.unidade")}</th>
+    <th class="num">${t("feira.preco")}</th><th class="num">${t("feira.tem")}</th>
+    <th>${t("feira.levar")}</th></tr></thead>`;
   const tb = el("tbody");
   for (const i of catalogo.insumos) {
     const tr = el("tr");
@@ -353,24 +366,26 @@ function atualizarTotalFeira() {
   const custo = custoCarrinho();
   const sobra = estado.caixa - custo;
   box.innerHTML = sobra < 0
-    ? `<b style="color:var(--rosa)">Falta ${money(-sobra)}</b> — tire alguma coisa do carrinho.`
-    : `Compra: <b>${money(custo)}</b> · sobra <b>${money(sobra)}</b>`;
+    ? `<b style="color:var(--rosa)">${t("feira.falta", { v: money(-sobra) })}</b>`
+    : t("feira.resumo", { c: `<b>${money(custo)}</b>`, s: `<b>${money(sobra)}</b>` });
   const btn = document.querySelector("button.principal");
   if (btn) btn.disabled = sobra < 0;
 }
 
 function cartaoCozinha() {
   const c = el("div", "cartao");
-  c.append(el("h2", null, tit("Cozinha")));
+  c.append(el("h2", null, tit(t("cozinha.titulo"))));
   c.append(el("p", "sub", t("cozinha.subtitulo")));
   const tab = el("table");
-  tab.innerHTML = `<thead><tr><th>Sabor</th><th class="num">Custo</th>
-    <th class="num">Dá pra fazer</th><th class="num">Pronto</th><th>Fazer</th></tr></thead>`;
+  tab.innerHTML = `<thead><tr><th>${t("cozinha.sabor")}</th>
+    <th class="num">${t("preco.custo")}</th>
+    <th class="num">${t("cozinha.maximo")}</th>
+    <th class="num">${t("cozinha.pronto_curto")}</th>
+    <th>${t("cozinha.produzir")}</th></tr></thead>`;
   tab.append(el("tbody", null, ""));
   tab.querySelector("tbody").id = "corpo-cozinha";
   c.append(tab);
-  c.append(el("p", "sub",
-    `Cabe ${estado.capacidade_freezer} no freezer. O que passar disso derrete.`));
+  c.append(el("p", "sub", t("cozinha.cabe", { n: estado.capacidade_freezer })));
   return c;
 }
 
@@ -378,7 +393,7 @@ function cartaoCozinha() {
 function recarregarCozinha() {
   const tb = document.querySelector("#corpo-cozinha");
   if (!tb) return;
-  saboresDoDia = eng.sabores(estado, carrinho, producao);
+  saboresDoDia = eng.sabores(estado, carrinho, producao, lang);
   tb.innerHTML = "";
 
   for (const s of saboresDoDia) {
@@ -410,16 +425,17 @@ function recarregarCozinha() {
 
 /** Texto do tooltip: o que precisa pra fazer 10 unidades. */
 function dicaReceita(s) {
+  const de = lang === "en" ? "of" : "de";
   const linhas = s.receita.map((r) => {
     const falta = r.tem < r.por_dez / 10;
     const cor = falta ? "var(--rosa)" : "var(--verde)";
-    return `<span style="color:${cor}">${r.por_dez} ${r.unidade} de ${r.nome}</span>` +
-           `<span style="color:var(--dim)"> (tem ${r.tem})</span>`;
+    return `<span style="color:${cor}">${r.por_dez} ${r.unidade} ${de} ${r.nome}</span>` +
+           `<span style="color:var(--dim)"> ${t("cozinha.tem", { n: r.tem })}</span>`;
   });
-  const cab = `<b>Pra fazer 10 ${catalogo.produto.plur}:</b>`;
+  const cab = `<b>${t("cozinha.pra10", { plur: catalogo.produto.plur })}</b>`;
   const rodape = s.faltando.length
-    ? `<div style="color:var(--rosa);margin-top:6px">Falta comprar: ${s.faltando.join(", ")}</div>`
-    : `<div style="color:var(--verde);margin-top:6px">Tem tudo que precisa.</div>`;
+    ? `<div style="color:var(--rosa);margin-top:6px">${t("cozinha.falta", { lista: s.faltando.join(", ") })}</div>`
+    : `<div style="color:var(--verde);margin-top:6px">${t("cozinha.tem_tudo")}</div>`;
   return `${cab}<br>${linhas.join("<br>")}${rodape}`;
 }
 
@@ -446,9 +462,8 @@ function passo(get, set, delta = 1, getMax = null) {
 function cartaoPreco(sabores) {
   const c = el("div", "cartao");
   c.id = "cartao-preco";
-  c.append(el("h2", null, tit("Preço")));
-  c.append(el("p", "sub",
-    "A curva mostra quantos compram em cada preço. O losango é o preço de maior lucro."));
+  c.append(el("h2", null, tit(t("preco.titulo"))));
+  c.append(el("p", "sub", t("preco.curva")));
   c.append(el("div", null, "").id = "");
   const alvo = el("div");
   alvo.id = "area-preco";
@@ -466,7 +481,7 @@ function montarPreco(sabores) {
 
   if (!lista.length) {
     area.innerHTML = `<p style="color:var(--dim);font-size:13px">
-      Faça alguma coisa na cozinha primeiro.</p>`;
+      ${t("preco.vazio")}</p>`;
     return;
   }
   area.innerHTML = "";
@@ -486,8 +501,8 @@ function blocoPreco(s) {
   const topo = el("div");
   topo.style.cssText = "display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px";
   topo.innerHTML = `<b>${s.nome}</b>
-    <span style="font-size:12px;color:var(--dim)">custo ${money(curva.custo)} ·
-    melhor preço <b style="color:var(--verde)">${money(curva.melhor_preco)}</b></span>`;
+    <span style="font-size:12px;color:var(--dim)">${t("preco.custo").toLowerCase()} ${money(curva.custo)} ·
+    ${t("preco.melhor")} <b style="color:var(--verde)">${money(curva.melhor_preco)}</b></span>`;
   box.append(topo);
 
   const svgBox = el("div", "grafico-caixa");
@@ -510,7 +525,7 @@ function blocoPreco(s) {
     const p = curva.pontos.reduce((a, b) =>
       Math.abs(b.preco - precos[s.key]) < Math.abs(a.preco - precos[s.key]) ? b : a);
     const margem = precos[s.key] - curva.custo;
-    info.innerHTML = `${Math.round(p.resposta * 100)}% compram · margem
+    info.innerHTML = `${t("preco.compram", { pct: Math.round(p.resposta * 100) })}
       <b style="color:${margem > 0 ? "var(--verde)" : "var(--rosa)"}">${money(margem)}</b>`;
     svgBox.innerHTML = "";
     svgBox.append(desenharCurva(curva, () => precos[s.key]));
@@ -593,7 +608,7 @@ function cartaoGelo() {
   if (estado.local_atual === "casa") return null;   // freezer de casa nao usa gelo
 
   const c = el("div", "cartao");
-  c.append(el("h2", null, tit("Gelo")));
+  c.append(el("h2", null, tit(t("ui.gelo"))));
   const corpo = el("div", "gelo-corpo");
   c.append(corpo);
   desenharGelo(corpo);
@@ -621,18 +636,18 @@ function desenharGelo(corpo) {
   corpo.innerHTML = "";
   const topo = el("div", "gelo-topo");
   topo.innerHTML =
-    `<div><span>Vai pro isopor</span><b>${unidades}</b></div>
-     <div><span>Um saco cobre</span><b class="${quente ? "quente" : ""}">${
+    `<div><span>${t("gelo.vai")}</span><b>${unidades}</b></div>
+     <div><span>${t("gelo.cobre")}</span><b class="${quente ? "quente" : ""}">${
        info.cobertura}</b>${quente
-         ? ` <i>calor: era ${info.cobertura_normal}</i>` : ""}</div>
-     <div><span>Saco</span><b>${money(info.preco_saco)}</b></div>`;
+         ? ` <i>${t("gelo.calor", { n: info.cobertura_normal })}</i>` : ""}</div>
+     <div><span>${t("gelo.saco")}</span><b>${money(info.preco_saco)}</b></div>`;
   corpo.append(topo);
 
   const linha = el("div", "gelo-linha");
   linha.append(passo(() => gelo, (v) => { gelo = v; desenharGelo(corpo); },
                      1, () => 8));
   const rot = el("div", "gelo-rotulo");
-  rot.innerHTML = `<b>${gelo}</b> saco${gelo === 1 ? "" : "s"} · ${
+  rot.innerHTML = `<b>${t("gelo.sacos", { n: gelo })}</b> · ${
     money(escolhido.custo)}`;
   linha.append(rot);
   corpo.append(linha);
@@ -640,12 +655,12 @@ function desenharGelo(corpo) {
   const perde = escolhido.derrete;
   const res = el("div", "gelo-resultado" + (perde ? " ruim" : " bom"));
   res.textContent = perde
-    ? `Derrete ${perde} unidade${perde === 1 ? "" : "s"} — gelo de menos.`
-    : (unidades ? "Dá pra tudo. Nada derrete." : "Nada pra gelar ainda.");
+    ? t("gelo.derrete", { n: perde })
+    : (unidades ? t("gelo.tudo") : t("gelo.nada"));
   corpo.append(res);
 
   if (perde && info.sugestao > gelo) {
-    const b = el("button", "sugestao", `Levar ${info.sugestao} e não perder nada`);
+    const b = el("button", "sugestao", t("gelo.atalho", { n: info.sugestao }));
     b.onclick = () => { gelo = info.sugestao; desenharGelo(corpo); };
     corpo.append(b);
   }
@@ -667,7 +682,7 @@ function telaRelatorio(r, desbloqueou) {
   app.append(cabecalho());
 
   const c = el("div", "cartao");
-  c.append(el("h2", null, `Como foi o dia ${r.dia}`));
+  c.append(el("h2", null, `${t("rel.titulo")} — ${t("ui.dia")} ${r.dia}`));
 
   const cl = el("div", "clima");
   cl.innerHTML = `<div class="icone">${ICONE[r.clima.kind] ?? "☀️"}</div>
@@ -684,9 +699,12 @@ function telaRelatorio(r, desbloqueou) {
   }
 
   const tab = el("table");
-  tab.innerHTML = `<thead><tr><th>Sabor</th><th class="num">Levou</th>
-    <th class="num">Vendeu</th><th class="num">Queriam</th>
-    <th class="num">Derreteu</th><th class="num">Receita</th></tr></thead>`;
+  tab.innerHTML = `<thead><tr><th>${t("rel.sabor")}</th>
+    <th class="num">${t("rel.levou")}</th>
+    <th class="num">${t("rel.vendeu")}</th>
+    <th class="num">${t("rel.queria_curto")}</th>
+    <th class="num">${t("rel.derreteu")}</th>
+    <th class="num">${t("rel.receita")}</th></tr></thead>`;
   const tb = el("tbody");
   for (const f of r.por_sabor) {
     const faltou = f.demanda_potencial > f.ofertados;
@@ -713,15 +731,11 @@ function telaRelatorio(r, desbloqueou) {
   // estoque e nao sabe por que. Aqui ele ve quanto e o motivo.
   const derretido = r.por_sabor.reduce((a, f) => a + f.perdidos_derretimento, 0);
   if (derretido > 0) {
-    c.append(el("div", "aviso ruim",
-      `Derreteu ${derretido} unidade${derretido === 1 ? "" : "s"}. ` +
-      `Mais gelo (ou um isopor melhor) segura o estoque.`));
+    c.append(el("div", "aviso ruim", t("rel.derreteu_aviso", { n: derretido })));
   }
   if (!r.por_sabor.length) {
     c.append(el("div", "aviso ruim",
-      estado.local_atual === "casa"
-        ? "Nada foi pro ponto hoje — faltou sabor pronto e com preço."
-        : "Nada chegou ao ponto: sem isopor vivo (ou tudo derreteu antes)."));
+      estado.local_atual === "casa" ? t("rel.nada_casa") : t("rel.nada_rua")));
   }
 
   const tiles = el("div", "tiles");
@@ -730,16 +744,16 @@ function telaRelatorio(r, desbloqueou) {
     d.append(el("span", null, rot), el("b", cls, val));
     tiles.append(d);
   };
-  tile("Receita", money(r.receita));
-  tile("Custos", money(r.custo_insumos + r.custo_fixo));
-  tile("Lucro", money(r.lucro), r.lucro >= 0 ? "lucro" : "prejuizo");
-  tile("Caixa", money(r.caixa_final));
+  tile(t("rel.receita"), money(r.receita));
+  tile(t("rel.custos"), money(r.custo_insumos + r.custo_fixo));
+  tile(t("rel.lucro"), money(r.lucro), r.lucro >= 0 ? "lucro" : "prejuizo");
+  tile(t("ui.caixa"), money(r.caixa_final));
   c.append(tiles);
 
   const local = catalogo.locais.find((l) => l.key === estado.local_atual);
   const pct = Math.min(100, Math.round(100 * estado.caixa / local.meta));
   c.append(el("p", "sub",
-    `Meta do capítulo: ${money(estado.caixa)} / ${money(local.meta)}`));
+    `${t("ui.meta")}: ${money(estado.caixa)} / ${money(local.meta)}`));
   const bm = el("div", "barra-meta");
   bm.innerHTML = `<i style="width:${pct}%"></i>`;
   c.append(bm);
@@ -763,21 +777,22 @@ function telaRelatorio(r, desbloqueou) {
     const info = catalogo.locais.find((l) => l.key === desbloqueou);
     const av = el("div", "aviso");
     av.innerHTML = `<b>${t("cap.desbloqueou")}</b> ${nome} —
-      entrada ${money(info.entrada)}, movimento ${info.trafego}/dia.`;
+      ${t("cap.det", { v: money(info.entrada), n: info.trafego })}`;
     app.append(av);
-    const b = el("button", "principal", `Mudar pra ${nome}`);
+    const b = el("button", "principal", t("cap.mudar", { nome }));
     b.onclick = () => {
       const o = eng.mudarDePonto(estado, desbloqueou);
       if (o.ok) {
         estado = o.estado;
         // Ponto novo abre sabores e insumos novos.
-        catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados);
+        catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
       }
       telaDia();
     };
     acoes.append(b);
   }
-  const seg = el("button", desbloqueou ? "secundaria" : "principal", "Próximo dia →");
+  const seg = el("button", desbloqueou ? "secundaria" : "principal",
+                 `${t("ui.proximo_dia")} →`);
   seg.onclick = () => {
     if (estado.encerrado) telaFim();
     else telaDia();
@@ -809,9 +824,10 @@ function telaFim() {
   const c = el("div", "cartao");
   const venceu = estado.encerrado === "vitoria";
   c.append(el("h2", null, venceu ? t("cap.vitoria") : t("cap.falencia")));
-  c.append(el("p", "sub",
-    `${estado.dia - 1} dias · caixa ${money(estado.caixa)} · fama ${Math.round(estado.reputacao)}`));
-  const b = el("button", "principal", "Jogar de novo");
+  c.append(el("p", "sub", t("fim.resumo", {
+    d: estado.dia - 1, c: money(estado.caixa), f: Math.round(estado.reputacao),
+  })));
+  const b = el("button", "principal", t("ui.denovo"));
   b.onclick = telaRegioes;
   c.append(b);
   app.append(c);

@@ -322,3 +322,16 @@ button.sugestao {
 
 .num.derreteu { color: var(--rosa); font-weight: 700; }
 .aviso.ruim { border-left: 3px solid var(--rosa); }
+
+/* ---------- seletor de idioma (tela de regioes) ---------- */
+.lang-picker { display: flex; gap: 8px; justify-content: flex-end;
+               margin-bottom: 6px; }
+.lang-chip {
+  font-size: 12px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--borda); background: transparent;
+  color: var(--dim); cursor: pointer;
+}
+.lang-chip:hover { border-color: var(--laranja); color: var(--texto); }
+.lang-chip.ativa {
+  border-color: var(--amarelo); color: var(--amarelo); font-weight: 700;
+}

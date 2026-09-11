@@ -76,5 +76,57 @@ _REG: dict[str, dict[str, list[str]]] = {
 }
 
 
-def pool(regiao: str, tag: str) -> list[str]:
+# Ingles: a freguesia continua brasileira -- a interjeicao e o vocativo
+# ficam, o resto vira ingles pra fala continuar servindo de diagnostico.
+_BASE_EN: dict[str, list[str]] = {
+    T.COMPRA_SIMPLES: ["One for me!", "I'll take two.", "Is it cold?"],
+    T.COMPRA_GOURMET: ["This creamy one is so good!", "Gimme one of the fancy ones."],
+    T.PRECO_ALTO: ["That's pricey...", "At that price I'll pass.",
+                   "Whoa, it went up, huh?"],
+    T.PRECO_BARATO: ["That's cheap! Three for me.", "At that price I'll take more."],
+    T.FILA: ["Look at this line!", "Let me cut in."],
+    T.SELLOUT: ["Sold out already?", "Darn, I got here late."],
+    T.CALOR: ["This heat is unbearable!", "I'm melting over here."],
+    T.CHUVA: ["Gotta run before I get soaked.", "What a downpour!"],
+}
+
+_REG_EN: dict[str, dict[str, list[str]]] = {
+    "ce": {
+        T.COMPRA_SIMPLES: ["Gimme a dindin there, ma broca!"],
+        T.PRECO_ALTO: ["Vixe, that's pricey, ma broca..."],
+        T.SELLOUT: ["Sold out, ma broca? Ê lasqueira."],
+        T.CALOR: ["Scorching hot — gimme a cold one!"],
+    },
+    "rj": {
+        T.COMPRA_SIMPLES: ["Gimme a sacolé, mermão!"],
+        T.PRECO_ALTO: ["Caraca, that's pricey, mermão..."],
+        T.SELLOUT: ["Sold out, mermão? Poxa."],
+    },
+    "mg": {
+        T.COMPRA_SIMPLES: ["Gimme a laranjinha, sô!"],
+        T.PRECO_ALTO: ["Uai, that's pricey, sô..."],
+        T.SELLOUT: ["Sold out, sô? What a pity."],
+    },
+    "sp": {
+        T.COMPRA_SIMPLES: ["Gimme a geladinho, mano!"],
+        T.PRECO_ALTO: ["That's pricey, meu..."],
+        T.SELLOUT: ["Sold out, meu? Bummer."],
+    },
+    "rs": {
+        T.COMPRA_SIMPLES: ["Gimme a gelinho, tchê!"],
+        T.PRECO_ALTO: ["Bah, that's pricey, tchê..."],
+        T.SELLOUT: ["Bah, sold out, tchê?"],
+    },
+    "pa": {
+        T.COMPRA_SIMPLES: ["Gimme a chup-chup, maninho!"],
+        T.COMPRA_GOURMET: ["Égua, this açaí one is pai d'égua, maninho!"],
+        T.PRECO_ALTO: ["Égua, that's pricey, maninho..."],
+        T.SELLOUT: ["Sold out, maninho? Égua..."],
+    },
+}
+
+
+def pool(regiao: str, tag: str, lang: str = "pt") -> list[str]:
+    if lang == "en":
+        return _REG_EN.get(regiao, {}).get(tag) or _BASE_EN.get(tag, [])
     return _REG.get(regiao, {}).get(tag) or _BASE.get(tag, [])

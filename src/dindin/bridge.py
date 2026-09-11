@@ -110,23 +110,27 @@ def estado_de_json(d: dict) -> GameState:
 
 # ---------------------------------------------------------------- conteudo
 
-def catalogo(regiao: str, desbloqueados: list | None = None) -> dict:
+def catalogo(regiao: str, desbloqueados: list | None = None,
+             lang: str = "pt") -> dict:
     """Tudo que a UI precisa saber de uma vez: textos, sabores, insumos, pontos.
 
     `desbloqueados` filtra pro que o jogador ja pode usar -- no dia 1 sao
     3 sabores e 4 insumos, nao os 17 e 8 do jogo inteiro.
+    `lang` traduz a interface; nome de produto e giria continuam regionais.
     """
-    tr = Translator(regiao)
+    tr = Translator(regiao, lang)
     liberados = list(desbloqueados) if desbloqueados else None
     return {
         "regiao": regiao,
+        "lang": tr.lang,
         "textos": {k: tr.t(k) for k in BASE},
         # Falas regionais: sem elas o navegador falaria pt-BR neutro.
-        "barks": {tag.value: pool(regiao, tag) for tag in BarkTag},
+        "barks": {tag.value: pool(regiao, tag, tr.lang) for tag in BarkTag},
         "produto": {"sing": tr.produto, "plur": tr.t("produto.plur")},
         "insumos": [
             {
-                "key": i.key, "nome": i.nome, "unidade": i.unidade,
+                "key": i.key, "nome": tr.t(f"insumo.{i.key}"),
+                "unidade": tr.t(f"insumo.unidade.{i.key}"),
                 "preco": i.preco_unitario(1, REGIOES[regiao].custo_insumo_mod),
                 "validade": i.validade_dias,
                 "bulk": [{"min": m, "fator": f} for m, f in i.bulk],
@@ -136,7 +140,8 @@ def catalogo(regiao: str, desbloqueados: list | None = None) -> dict:
         ],
         "sabores": [
             {
-                "key": f.key, "nome": f.nome, "tier": f.tier.value,
+                "key": f.key, "nome": tr.t(f"sabor.{f.key}"),
+                "tier": f.tier.value,
                 "preco_ref": f.preco_ref, "apelo": f.apelo_base,
                 "desbloqueio": f.desbloqueio,
                 "custo": economy.custo_unitario(f.key, regiao),
@@ -148,7 +153,7 @@ def catalogo(regiao: str, desbloqueados: list | None = None) -> dict:
         ],
         "locais": [
             {
-                "key": l.key, "nome": l.nome, "ordem": l.ordem,
+                "key": l.key, "nome": tr.t(f"local.{l.key}"), "ordem": l.ordem,
                 "meta": l.meta_caixa, "entrada": l.custo_entrada,
                 "trafego": l.trafego_base, "capacidade": l.capacidade,
                 "custo_fixo": l.custo_fixo_dia,
@@ -165,22 +170,32 @@ def catalogo(regiao: str, desbloqueados: list | None = None) -> dict:
     }
 
 
-def regioes() -> list[dict]:
+def textos_base(lang: str = "pt") -> dict:
+    """Textos neutros (sem sotaque regional) pra tela de escolha de regiao."""
+    from .i18n.base_en import BASE_EN
+
+    base = BASE_EN if lang == "en" else BASE
+    return {k: base.get(k) or BASE[k] for k in BASE}
+
+
+def regioes(lang: str = "pt") -> list[dict]:
     """Lista pra tela de escolha, ja com o nome do produto em cada estado."""
     saida = []
     for key in ORDEM_REGIOES:
         r = REGIOES[key]
-        tr = Translator(key)
+        tr = Translator(key, lang)
+        # Giria e fala de rua: fica em portugues em qualquer idioma.
+        tr_pt = Translator(key)
         favoritos = sorted(r.preferencia.items(), key=lambda kv: -kv[1])[:3]
         saida.append({
             "key": key, "nome": r.nome, "gentilico": r.gentilico,
             "produto": tr.produto,
-            "giria": [tr.t("interj.surpresa"), tr.t("interj.positivo"),
-                      tr.t("vocativo")],
+            "giria": [tr_pt.t("interj.surpresa"), tr_pt.t("interj.positivo"),
+                      tr_pt.t("vocativo")],
             "tolerancia": r.tolerancia_preco,
             "custo_mod": r.custo_insumo_mod,
             "favoritos": [
-                {"key": k, "nome": SABORES[k].nome, "mult": m}
+                {"key": k, "nome": tr.t(f"sabor.{k}"), "mult": m}
                 for k, m in favoritos if k in SABORES
             ],
         })
@@ -199,11 +214,12 @@ def previsao(estado: dict) -> dict:
     return _jsonify(clima_do_dia(state, state.dia))
 
 
-def isopores(estado: dict) -> dict:
+def isopores(estado: dict, lang: str = "pt") -> dict:
     """Caixas a venda + o estado da que esta em uso."""
     from .content.coolers import ISOPORES, ORDEM_ISOPORES
 
     state = estado_de_json(estado)
+    tr = Translator(state.regiao, lang)
     return {
         "atual": state.isopor,
         "dias_restantes": state.isopor_dias,
@@ -211,12 +227,12 @@ def isopores(estado: dict) -> dict:
         "acabando": progression.isopor_acabando(state),
         "opcoes": [
             {
-                "key": k, "nome": ISOPORES[k].nome,
+                "key": k, "nome": tr.t(f"isopor.nome.{k}"),
                 "custo": ISOPORES[k].custo, "dias": ISOPORES[k].dias,
                 "capacidade": ISOPORES[k].capacidade,
                 "derretimento": ISOPORES[k].derretimento,
                 "custo_por_dia": ISOPORES[k].custo_por_dia,
-                "descricao": ISOPORES[k].descricao,
+                "descricao": tr.t(f"isopor.desc.{k}"),
                 "pode": state.caixa >= ISOPORES[k].custo,
             }
             for k in ORDEM_ISOPORES
@@ -261,7 +277,8 @@ def info_do_gelo(estado: dict, unidades: int) -> dict:
 
 
 def sabores_do_jogador(estado: dict, carrinho: dict | None = None,
-                       producao: dict | None = None) -> list[dict]:
+                       producao: dict | None = None,
+                       lang: str = "pt") -> list[dict]:
     """Sabores disponiveis e quanto da pra fazer de cada um.
 
     `carrinho` e o que o jogador acabou de por na feira mas ainda nao
@@ -273,6 +290,7 @@ def sabores_do_jogador(estado: dict, carrinho: dict | None = None,
     derrubar o maximo do maracuja -- senao o jogador planeja mais do que cabe.
     """
     state = estado_de_json(estado)
+    tr = Translator(state.regiao, lang)
     if carrinho:
         for key, qtd in carrinho.items():
             if qtd and key in INSUMOS:
@@ -288,9 +306,9 @@ def sabores_do_jogador(estado: dict, carrinho: dict | None = None,
             precisa = por_dez / 10.0
             tem = state.inventario.total(ing_key)
             if tem < precisa:
-                faltando[ing_key] = INSUMOS[ing_key].nome
+                faltando[ing_key] = tr.t(f"insumo.{ing_key}")
         saida.append({
-            "key": f.key, "nome": f.nome, "tier": f.tier.value,
+            "key": f.key, "nome": tr.t(f"sabor.{f.key}"), "tier": f.tier.value,
             "custo": economy.custo_unitario(f.key, state.regiao),
             "preco_ref": f.preco_ref,
             "pode_produzir": economy.pode_produzir_com_reserva(
@@ -299,8 +317,8 @@ def sabores_do_jogador(estado: dict, carrinho: dict | None = None,
             "receita": [
                 {
                     "key": k,
-                    "nome": INSUMOS[k].nome,
-                    "unidade": INSUMOS[k].unidade,
+                    "nome": tr.t(f"insumo.{k}"),
+                    "unidade": tr.t(f"insumo.unidade.{k}"),
                     "por_dez": v,
                     "tem": round(state.inventario.total(k), 2),
                 }

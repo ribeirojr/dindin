@@ -256,3 +256,51 @@ def test_sem_isopor_vivo_o_dia_roda_de_casa():
     assert out["resultado"]["custo_fixo"] == 0, "em casa nao paga o fixo da rua"
     # O ponto continua do jogador: e o que mantem a vitrine de isopor visivel.
     assert out["estado"]["local_atual"] == "isopor"
+
+
+def test_catalogo_em_ingles_traduz_a_interface():
+    cat = bridge.catalogo("ce", lang="en")
+    assert cat["lang"] == "en"
+    assert cat["textos"]["feira.titulo"] == "Market"
+    assert cat["textos"]["ui.novo_jogo"] == "New game"
+    assert not any(v.startswith("⟨missing:") for v in cat["textos"].values())
+    # Nome proprio fica: o produto continua sendo dindin.
+    assert cat["produto"]["sing"] == "dindin"
+    nomes = {s["key"]: s["nome"] for s in cat["sabores"]}
+    assert nomes["coco"] == "Coconut"
+    insumos = {i["key"]: i["nome"] for i in cat["insumos"]}
+    assert insumos["acucar"] == "Sugar"
+    assert any("pricey" in f for f in cat["barks"]["preco_alto"])
+
+
+def test_catalogo_default_continua_em_portugues():
+    cat = bridge.catalogo("ce")
+    assert cat["lang"] == "pt"
+    assert cat["textos"]["feira.titulo"] == "Feira"
+    nomes = {s["key"]: s["nome"] for s in cat["sabores"]}
+    assert nomes["coco"] == "Coco"
+
+
+def test_regioes_em_ingles_mantem_a_giria():
+    """A giria e fala de rua: fica em portugues ate no modo ingles."""
+    en = {r["key"]: r for r in bridge.regioes("en")}
+    assert en["ce"]["produto"] == "dindin"
+    assert "Vixe" in en["ce"]["giria"]
+    assert any(f["nome"] == "Coconut" for f in en["ce"]["favoritos"])
+
+
+def test_isopores_e_sabores_do_jogador_em_ingles():
+    st = bridge.novo_jogo("pa", 1)
+    st["local_atual"] = "isopor"
+    st["locais_desbloqueados"] = ["casa", "isopor"]
+    info = bridge.isopores(st, lang="en")
+    assert all(not o["nome"].startswith("⟨missing:") for o in info["opcoes"])
+    assert "styrofoam" in info["opcoes"][0]["nome"].lower()
+
+    sabores = bridge.sabores_do_jogador(st, lang="en")
+    coco = next(s for s in sabores if s["key"] == "coco")
+    assert coco["nome"] == "Coconut"
+    assert all("nome" in r and not r["nome"].startswith("⟨missing:")
+               for r in coco["receita"])
+    assert coco["faltando"], "sem estoque, lista o que falta (em ingles)"
+    assert "Sugar" in coco["faltando"]

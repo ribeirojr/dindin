@@ -6,7 +6,7 @@
   "scripts": {
     "build": "uv run python tools/build_web.py",
     "serve": "cd web && python3 -m http.server 8765",
-    "test": "node tests/web/dom_test.mjs"
+    "test": "node tests/web/dom_test.mjs && node tests/web/isopor_gelo_test.mjs && node tests/web/english_test.mjs"
   },
   "devDependencies": {
     "jsdom": "^26.0.0",

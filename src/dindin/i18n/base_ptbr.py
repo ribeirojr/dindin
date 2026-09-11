@@ -144,4 +144,109 @@ BASE: dict[str, str] = {
     "clima.chuva": "chuva",
     "clima.temporal": "temporal",
     "clima.frio": "frio",
+    "clima.sensacao": "sensação",
+    "clima.dica.temporal": "Temporal. Quase ninguém na rua.",
+    "clima.dica.chuva": "Chuva. Movimento fraco.",
+    "clima.dica.frio": "Frio. Ninguém quer gelado.",
+    "clima.dica.calorao": "Calor forte! Vai vender muito — e dá pra cobrar mais.",
+    "clima.dica.bom": "Movimento bom.",
+    "clima.dica.normal": "Movimento normal.",
+
+    # --- web: telas ---
+    "regiao.subtitulo": "O doce muda de nome em cada estado — e o clima, "
+                        "o gosto e o preço mudam junto.",
+    "regiao.sai_muito": "Sai muito",
+    "ui.fama": "Fama",
+    "ui.no_caixa": "No caixa",
+    "ui.meta_curta": "Meta",
+    "ui.faltam": "faltam {v}",
+    "ui.meta_batida": "batida!",
+    "ui.sabores": "Sabores",
+    "ui.congelado": "Congelado",
+    "ui.antes": "Antes de começar: veja como está o dia.",
+    "ui.vender": "Vender! →",
+    "ui.denovo": "Jogar de novo",
+    "ui.comprar": "Comprar",
+    "ui.falta_dinheiro": "Falta dinheiro",
+    "ui.gelo": "Gelo",
+    "ui.isopor": "Isopor",
+    "dica.casa": "Comece pequeno: faça poucos e veja quantos a vizinhança quer.",
+    "dica.isopor": "Na rua o movimento é bem maior — mas chuva esvazia a calçada.",
+    "dica.praia": "Praia paga mais caro e adora cremoso. Só que chuva aqui é fatal.",
+    "dica.escola": "Criança tem pouco dinheiro: aqui o barato vende, o gourmet encalha.",
+    "dica.carrinho": "Seu ponto, suas regras. Olhe a previsão e escolha o dia certo.",
+
+    # --- web: isopor ---
+    "isopor.em_uso": "Em uso",
+    "isopor.dura_mais": "Dura mais",
+    "isopor.capacidade": "Capacidade",
+    "isopor.dias_valor": "{n} dia(s)",
+    "isopor.acabando": "O isopor tá no fim. Vale já comprar outro.",
+    "isopor.precisa": "Sem isopor não dá pra vender na rua. Ele dura vários dias.",
+    "isopor.det1": "{dias} dias · cabe {cap}",
+    "isopor.det2": "{custo}/dia · derrete {pct}%",
+
+    # --- web: feira e cozinha ---
+    "feira.tem": "Tem",
+    "feira.levar": "Levar",
+    "feira.falta": "Falta {v} — tire alguma coisa do carrinho.",
+    "feira.resumo": "Compra: {c} · sobra {s}",
+    "cozinha.pronto_curto": "Pronto",
+    "cozinha.pra10": "Pra fazer 10 {plur}:",
+    "cozinha.tem": "(tem {n})",
+    "cozinha.falta": "Falta comprar: {lista}",
+    "cozinha.tem_tudo": "Tem tudo que precisa.",
+    "cozinha.cabe": "Cabe {n} no freezer. O que passar disso derrete.",
+
+    # --- web: preco e gelo ---
+    "preco.curva": "A curva mostra quantos compram em cada preço. "
+                   "O losango é o preço de maior lucro.",
+    "preco.melhor": "melhor preço",
+    "preco.compram": "{pct}% compram · margem",
+    "preco.vazio": "Faça alguma coisa na cozinha primeiro.",
+    "gelo.vai": "Vai pro isopor",
+    "gelo.cobre": "Um saco cobre",
+    "gelo.calor": "calor: era {n}",
+    "gelo.saco": "Saco",
+    "gelo.sacos": "{n} saco(s)",
+    "gelo.derrete": "Derrete {n} unidade(s) — gelo de menos.",
+    "gelo.tudo": "Dá pra tudo. Nada derrete.",
+    "gelo.nada": "Nada pra gelar ainda.",
+    "gelo.atalho": "Levar {n} e não perder nada",
+
+    # --- web: relatorio e fim ---
+    "rel.queria_curto": "Queriam",
+    "rel.derreteu_aviso": "Derreteu {n} unidade(s). Mais gelo "
+                          "(ou um isopor melhor) segura o estoque.",
+    "rel.nada_casa": "Nada foi pro ponto hoje — faltou sabor pronto e com preço.",
+    "rel.nada_rua": "Nada chegou ao ponto: sem isopor vivo "
+                    "(ou tudo derreteu antes).",
+    "cap.det": "entrada {v}, movimento {n}/dia.",
+    "cap.mudar": "Mudar pra {nome}",
+    "fim.resumo": "{d} dias · caixa {c} · fama {f}",
 }
+
+
+def _nomes_do_conteudo() -> dict[str, str]:
+    """Nomes de sabores, insumos e isopores viram chaves i18n.
+
+    Em pt eles JA vivem em content/ (fonte da verdade); aqui viram chave pra
+    ingles poder traduzir sem duplicar nada no lado portugues.
+    """
+    from ..content.coolers import ISOPORES
+    from ..content.flavors import SABORES
+    from ..content.ingredients import INSUMOS
+
+    nomes: dict[str, str] = {}
+    for k, f in SABORES.items():
+        nomes[f"sabor.{k}"] = f.nome
+    for k, i in INSUMOS.items():
+        nomes[f"insumo.{k}"] = i.nome
+        nomes[f"insumo.unidade.{k}"] = i.unidade
+    for k, c in ISOPORES.items():
+        nomes[f"isopor.nome.{k}"] = c.nome
+        nomes[f"isopor.desc.{k}"] = c.descricao
+    return nomes
+
+
+BASE.update(_nomes_do_conteudo())

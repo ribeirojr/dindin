@@ -123,11 +123,16 @@ cd web && python3 -m http.server 8765
 
 Detalhes e medições em [`web/README.md`](web/README.md).
 
+A versão web joga em **português ou inglês** — o seletor fica na tela
+inicial (ou direto por `?lang=en`). Só a interface traduz: o produto continua
+com o nome regional (dindin, sacolé...) e a freguesia continua falando com o
+sotaque de lá — "Vixe, that's pricey, ma broca...".
+
 ## Desenvolvimento
 
 ```bash
 uv sync                              # instala tudo
-uv run pytest                        # 202 testes
+uv run pytest                        # 236 testes
 npm test                             # testa a versão web num DOM real
 uv run python tools/balance_sim.py   # confere o balanceamento
 ```
