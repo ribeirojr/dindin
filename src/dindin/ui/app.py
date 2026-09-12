@@ -1,6 +1,7 @@
 """DindinApp: amarra as telas no ciclo do dia."""
 
 from textual.app import App
+from textual.theme import Theme
 
 from ..content.flavors import SABORES
 from ..i18n import Translator
@@ -23,11 +24,34 @@ from .screens.report import ReportScreen
 from .screens.simulation import SimulationScreen
 from .screens.title import TitleScreen
 
+# Tema escuro (padrao): a paleta tropical original do jogo.
+TEMA_ESCURO = Theme(
+    name="dindin-escuro",
+    primary="#f28c28", secondary="#7b4fa8", accent="#f5c518",
+    warning="#f5c518", error="#e8517a", success="#2fa84f",
+    dark=True,
+)
+
+# "Modo bandeira": tema claro com a paleta da bandeira do Brasil
+# (verde 009c3b, amarelo ffdf00, azul 002776) -- o mesmo par que a versao
+# web oferece (ver web/styles.css, [data-tema="claro"]).
+TEMA_BANDEIRA = Theme(
+    name="dindin-bandeira",
+    primary="#00762c", secondary="#002776", accent="#009c3b",
+    warning="#a15c00", error="#b3574f", success="#00762c",
+    foreground="#002776", background="#fbf8ec", surface="#ffffff",
+    panel="#f0ecd8", dark=False,
+)
+
 
 class DindinApp(App[None]):
     CSS_PATH = "dindin.tcss"
     TITLE = "DinDin"
-    BINDINGS = [("question_mark", "ajuda", "Ajuda"), ("ctrl+q", "quit", "Sair")]
+    BINDINGS = [
+        ("question_mark", "ajuda", "Ajuda"),
+        ("t", "alternar_tema", "Modo bandeira"),
+        ("ctrl+q", "quit", "Sair"),
+    ]
 
     def __init__(self, seed: int | None = None, regiao: str | None = None) -> None:
         super().__init__()
@@ -35,12 +59,19 @@ class DindinApp(App[None]):
         self.regiao_inicial = regiao
         self.state: GameState | None = None
         self.tr = Translator("ce")
+        self.register_theme(TEMA_ESCURO)
+        self.register_theme(TEMA_BANDEIRA)
+        self.theme = TEMA_ESCURO.name
 
     async def on_mount(self) -> None:
         self.run_worker(self._jogo(), exclusive=True)
 
     def action_ajuda(self) -> None:
         self.push_screen(HelpScreen(self.tr))
+
+    def action_alternar_tema(self) -> None:
+        claro = self.theme == TEMA_BANDEIRA.name
+        self.theme = TEMA_ESCURO.name if claro else TEMA_BANDEIRA.name
 
     async def _jogo(self) -> None:
         while True:
