@@ -64,6 +64,14 @@ def politica_competente(state: GameState, ratio: float = 1.0) -> DayPlan:
     falta = max(0, alvo - ja_pronto)
     por_sabor = {k: max(0, falta // len(escolhidos)) for k in escolhidos}
 
+    gelo = 0 if state.local_atual == "casa" else max(1, (alvo + 49) // 50)
+    # Reserva o gelo antes de gastar em insumo: produzir sem conseguir
+    # gelar e desperdicio garantido no calor (ver falta_de_gelo).
+    orcamento_insumos = state.caixa
+    if gelo:
+        preco_gelo = economy.custo_compras({"gelo": 1}, state.regiao)
+        orcamento_insumos = max(0, state.caixa - gelo * preco_gelo)
+
     # Compra insumos do que falta, com folga.
     compras: dict[str, int] = {}
     for k, qtd in por_sabor.items():
@@ -73,15 +81,13 @@ def politica_competente(state: GameState, ratio: float = 1.0) -> DayPlan:
                 compras[ing] = compras.get(ing, 0) + max(1, int(precisa - tem + 0.999))
 
     custo = economy.custo_compras(compras, state.regiao)
-    while custo > state.caixa and compras:
+    while custo > orcamento_insumos and compras:
         maior = max(compras, key=lambda k: compras[k])
         compras[maior] -= 1
         if compras[maior] <= 0:
             del compras[maior]
         por_sabor = {k: int(v * 0.8) for k, v in por_sabor.items()}
         custo = economy.custo_compras(compras, state.regiao)
-
-    gelo = 0 if state.local_atual == "casa" else max(1, (alvo + 49) // 50)
     precos = {k: _preco_otimo(k, state.regiao, tol, ratio) for k in escolhidos}
     return DayPlan(producao=por_sabor, precos=precos, local=state.local_atual,
                    compras=compras, gelo=gelo)

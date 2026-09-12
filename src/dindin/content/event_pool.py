@@ -29,6 +29,8 @@ _E = (
     GameEvent("semana_farroupilha", EK.SOCIAL, 0.035, trafego_mod=1.40, regioes=("rs",)),
     GameEvent("cirio_nazare", EK.SOCIAL, 0.040, trafego_mod=1.75, regioes=("pa",)),
     GameEvent("chuva_das_duas", EK.CLIMA, 0.055, trafego_mod=0.70, regioes=("pa",)),
+    GameEvent("seca_do_cerrado", EK.CLIMA, 0.045, trafego_mod=1.35, regioes=("df",)),
+    GameEvent("greve_servidor", EK.SOCIAL, 0.035, trafego_mod=1.20, regioes=("df",)),
 )
 
 EVENTOS: dict[str, GameEvent] = {e.key: e for e in _E}

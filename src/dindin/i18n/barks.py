@@ -73,6 +73,15 @@ _REG: dict[str, dict[str, list[str]]] = {
         T.SELLOUT: ["Acabou, maninho? Égua..."],
         T.CALOR: ["Tá um calor desgraçado, me vê um gelado!"],
     },
+    "df": {
+        T.COMPRA_SIMPLES: ["Me vê um geladim, bicho!", "Eita, manda dois!"],
+        T.COMPRA_GOURMET: ["Massa esse cremoso, bicho!"],
+        T.PRECO_ALTO: ["Eita, tá caro, bicho...", "Massa não, hein, subiu demais.",
+                       "Por esse preço eu passo."],
+        T.PRECO_BARATO: ["Massa esse preço! Me vê três."],
+        T.SELLOUT: ["Acabou, bicho? Eita perrengue."],
+        T.CALOR: ["Eita, esse sol tá de rachar. Me vê um!"],
+    },
 }
 
 
@@ -122,6 +131,11 @@ _REG_EN: dict[str, dict[str, list[str]]] = {
         T.COMPRA_GOURMET: ["Égua, this açaí one is pai d'égua, maninho!"],
         T.PRECO_ALTO: ["Égua, that's pricey, maninho..."],
         T.SELLOUT: ["Sold out, maninho? Égua..."],
+    },
+    "df": {
+        T.COMPRA_SIMPLES: ["Gimme a geladim, bicho!"],
+        T.PRECO_ALTO: ["Eita, that's pricey, bicho..."],
+        T.SELLOUT: ["Sold out, bicho? Eita."],
     },
 }
 

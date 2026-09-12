@@ -10,7 +10,7 @@ from ...content.flavors import SABORES
 from ...content.regions import ORDEM_REGIOES, REGIOES
 from ...i18n import Translator
 
-_DIFICULDADE = {"ce": 2, "rj": 2, "mg": 3, "sp": 3, "rs": 4, "pa": 2}
+_DIFICULDADE = {"ce": 2, "rj": 2, "mg": 3, "sp": 3, "rs": 4, "pa": 2, "df": 3}
 _CLIMA_TXT = {
     "ce": "Calor o ano inteiro, quase nunca chove.",
     "rj": "Quente, mas o temporal chega sem avisar.",
@@ -18,6 +18,7 @@ _CLIMA_TXT = {
     "sp": "Instável: quatro estações num dia só.",
     "rs": "Verão forte, inverno congela as vendas.",
     "pa": "Calor e a chuva das duas, todo santo dia.",
+    "df": "Verão chuvoso, mas o inverno é seco de rachar.",
 }
 
 

@@ -213,6 +213,19 @@ export const CENA_REGIAO = {
   <rect y="86" width="320" height="26" fill="#22273a"></rect>
   <path d="M24,98 H88 M120,104 H182 M220,98 H288" stroke="#9184d9" stroke-width="2" opacity="0.25"></path>
 </svg>`,
+    df: `
+<svg viewBox="0 0 320 112" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Brasilia: Congresso Nacional ao entardecer, espelho d'agua">
+  <rect width="320" height="112" fill="#1c2033"></rect>
+  <circle cx="256" cy="30" r="22" fill="#e8c07a" opacity="0.8"></circle>
+  <rect x="128" y="52" width="10" height="30" fill="#2e3346"></rect>
+  <rect x="182" y="46" width="10" height="36" fill="#2e3346"></rect>
+  <rect x="86" y="72" width="148" height="10" fill="#262a3c"></rect>
+  <ellipse cx="98" cy="64" rx="20" ry="9" fill="#343a52"></ellipse>
+  <path d="M198,72 a24,15 0 0 1 48,0 Z" fill="#3a4058"></path>
+  <rect y="82" width="320" height="30" fill="#171a28"></rect>
+  <path d="M0,84 H320" stroke="#9184d9" stroke-width="1.5" opacity="0.4"></path>
+  <path d="M40,92 q12,-5 24,0 t24,0 M180,96 q12,-5 24,0 t24,0" stroke="#2c3a52" stroke-width="2" fill="none"></path>
+</svg>`,
   },
   claro: {
     ce: `
@@ -324,6 +337,19 @@ export const CENA_REGIAO = {
   </g>
   <rect y="86" width="320" height="26" fill="#5aa84c"></rect>
   <path d="M24,98 H88 M120,104 H182 M220,98 H288" stroke="#bfeaf7" stroke-width="2" opacity="0.6"></path>
+</svg>`,
+    df: `
+<svg viewBox="0 0 320 112" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Brasilia: Congresso Nacional sob ceu azul, espelho d'agua">
+  <rect width="320" height="112" fill="#a9ddf3"></rect>
+  <circle cx="256" cy="26" r="18" fill="#ffdf00"></circle>
+  <rect x="128" y="52" width="10" height="30" fill="#ffffff"></rect>
+  <rect x="182" y="46" width="10" height="36" fill="#ffffff"></rect>
+  <rect x="86" y="72" width="148" height="10" fill="#f4eeda"></rect>
+  <ellipse cx="98" cy="64" rx="20" ry="9" fill="#e9e0c4"></ellipse>
+  <path d="M198,72 a24,15 0 0 1 48,0 Z" fill="#f4eeda"></path>
+  <rect y="82" width="320" height="30" fill="#1f9bc4"></rect>
+  <path d="M0,84 H320" stroke="#bfeaf7" stroke-width="1.5" opacity="0.8"></path>
+  <path d="M40,92 q12,-5 24,0 t24,0 M180,96 q12,-5 24,0 t24,0" stroke="#bfeaf7" stroke-width="2" fill="none"></path>
 </svg>`,
   },
 };

@@ -7,7 +7,7 @@ from .barks import pool
 from .base_en import BASE_EN, OVERRIDES_EN
 from .base_ptbr import BASE
 
-REGIOES_I18N = ("ce", "rj", "mg", "sp", "rs", "pa")
+REGIOES_I18N = ("ce", "rj", "mg", "sp", "rs", "pa", "df")
 IDIOMAS = ("pt", "en")
 
 

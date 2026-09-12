@@ -127,6 +127,8 @@ BASE: dict[str, str] = {
     "evento.semana_farroupilha": "Semana Farroupilha, movimento bom.",
     "evento.cirio_nazare": "Círio! A cidade inteira na rua.",
     "evento.chuva_das_duas": "Chuva das duas, na hora certa.",
+    "evento.seca_do_cerrado": "Seca do cerrado: meses sem chuva, ar seco de rachar.",
+    "evento.greve_servidor": "Greve de servidor público — meio-dia e a cidade tá na rua.",
     "evento.carnaval": "Carnaval!",
     "evento.sao_joao": "São João!",
     "evento.sao_pedro": "São Pedro!",

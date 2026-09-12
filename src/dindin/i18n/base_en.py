@@ -132,6 +132,8 @@ BASE_EN: dict[str, str] = {
     "evento.semana_farroupilha": "Farroupilha Week, good crowds.",
     "evento.cirio_nazare": "Círio! The whole city is out.",
     "evento.chuva_das_duas": "The 2pm rain, right on schedule.",
+    "evento.seca_do_cerrado": "Cerrado dry season: months without rain, bone-dry air.",
+    "evento.greve_servidor": "Civil servants on strike — the whole city's out at noon.",
     "evento.carnaval": "Carnival!",
     "evento.sao_joao": "São João festival!",
     "evento.sao_pedro": "São Pedro festival!",
@@ -293,4 +295,5 @@ OVERRIDES_EN: dict[str, dict[str, str]] = {
     "sp": {"produto.sing": "geladinho", "produto.plur": "geladinhos"},
     "rs": {"produto.sing": "gelinho", "produto.plur": "gelinhos"},
     "pa": {"produto.sing": "chup-chup", "produto.plur": "chup-chups"},
+    "df": {"produto.sing": "geladim", "produto.plur": "geladins"},
 }

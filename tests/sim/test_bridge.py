@@ -15,7 +15,7 @@ def test_estado_novo_e_json_puro():
     assert st["caixa"] == 8000
 
 
-@pytest.mark.parametrize("regiao", ["ce", "rj", "mg", "sp", "rs", "pa"])
+@pytest.mark.parametrize("regiao", ["ce", "rj", "mg", "sp", "rs", "pa", "df"])
 def test_catalogo_serializa_em_json(regiao):
     cat = bridge.catalogo(regiao)
     assert json.loads(json.dumps(cat, ensure_ascii=False)) == cat
@@ -28,7 +28,7 @@ def test_cada_regiao_tem_produto_proprio_na_ponte():
     produtos = {r["key"]: r["produto"] for r in bridge.regioes()}
     assert produtos == {
         "ce": "dindin", "rj": "sacolé", "mg": "laranjinha",
-        "sp": "geladinho", "rs": "gelinho", "pa": "chup-chup",
+        "sp": "geladinho", "rs": "gelinho", "pa": "chup-chup", "df": "geladim",
     }
 
 

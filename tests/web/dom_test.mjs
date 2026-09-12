@@ -137,7 +137,7 @@ console.log(erros.length ? erros : "  nenhum ✓");
 
 // --- veredito ---
 const falhas = [];
-if (cards.length !== 6) falhas.push("deviam ser 6 regioes");
+if (cards.length !== 7) falhas.push("deviam ser 7 regioes");
 if (!linhasAntes.length) falhas.push("cozinha nasceu vazia");
 if (!linhasAntes.some(l => l.endsWith("-> 0"))) falhas.push("sem insumo devia mostrar 0");
 if (JSON.stringify(linhasAntes) === JSON.stringify(linhasDepois))

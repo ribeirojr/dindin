@@ -26,7 +26,7 @@ const MODULOS = [
   "i18n/__init__.py", "i18n/base_ptbr.py", "i18n/base_en.py", "i18n/barks.py",
   "i18n/overrides/__init__.py", "i18n/overrides/ce.py", "i18n/overrides/rj.py",
   "i18n/overrides/mg.py", "i18n/overrides/sp.py", "i18n/overrides/rs.py",
-  "i18n/overrides/pa.py",
+  "i18n/overrides/pa.py", "i18n/overrides/df.py",
 ];
 
 export class DindinEngine {

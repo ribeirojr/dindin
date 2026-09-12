@@ -44,7 +44,7 @@ def test_cada_regiao_tem_nome_proprio_do_produto(regiao):
 def test_produtos_sao_todos_diferentes():
     nomes = {Translator(r).produto for r in REGIOES_I18N}
     assert nomes == {"dindin", "sacolé", "laranjinha", "geladinho",
-                     "gelinho", "chup-chup"}
+                     "gelinho", "chup-chup", "geladim"}
 
 
 @pytest.mark.parametrize("regiao", REGIOES_I18N)

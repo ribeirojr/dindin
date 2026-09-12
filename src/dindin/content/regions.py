@@ -104,6 +104,25 @@ PARA = Region(
     eventos_exclusivos=("cirio_nazare", "chuva_das_duas"),
 )
 
+BRASILIA = Region(
+    key="df", nome="Distrito Federal", gentilico="brasiliense",
+    # Cerrado: verao chuvoso (out-abr) e um inverno seco de rachar --
+    # meses a fio sem chuva, umidade baixissima, calor seco o dia inteiro.
+    clima={Season.VERAO: {W.ESCALDANTE: 0.14, W.QUENTE: 0.32, W.ABAFADO: 0.16,
+                          W.NUBLADO: 0.14, W.CHUVA: 0.18, W.TEMPORAL: 0.06, W.FRIO: 0.00},
+           Season.OUTONO: {W.ESCALDANTE: 0.18, W.QUENTE: 0.34, W.ABAFADO: 0.10,
+                           W.NUBLADO: 0.16, W.CHUVA: 0.14, W.TEMPORAL: 0.04, W.FRIO: 0.04},
+           Season.INVERNO: {W.ESCALDANTE: 0.30, W.QUENTE: 0.38, W.ABAFADO: 0.04,
+                            W.NUBLADO: 0.16, W.CHUVA: 0.01, W.TEMPORAL: 0.00, W.FRIO: 0.11},
+           Season.PRIMAVERA: {W.ESCALDANTE: 0.20, W.QUENTE: 0.32, W.ABAFADO: 0.12,
+                              W.NUBLADO: 0.14, W.CHUVA: 0.16, W.TEMPORAL: 0.06, W.FRIO: 0.00}},
+    base_temp_c=(24.0, 32.0),
+    preferencia={"manga": 1.40, "milho_verde": 1.30, "caja": 1.20, "coco": 1.05,
+                 "acai": 0.90, "bacuri": 0.75},
+    tolerancia_preco=1.08, custo_insumo_mod=1.05,
+    eventos_exclusivos=("seca_do_cerrado", "greve_servidor"),
+)
+
 REGIOES: dict[str, Region] = {r.key: r for r in
-                              (CEARA, RIO, MINAS, SAO_PAULO, RIO_GRANDE, PARA)}
-ORDEM_REGIOES = ("ce", "rj", "mg", "sp", "rs", "pa")
+                              (CEARA, RIO, MINAS, SAO_PAULO, RIO_GRANDE, PARA, BRASILIA)}
+ORDEM_REGIOES = ("ce", "rj", "mg", "sp", "rs", "pa", "df")
