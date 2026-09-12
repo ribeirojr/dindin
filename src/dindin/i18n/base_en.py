@@ -243,6 +243,13 @@ BASE_EN: dict[str, str] = {
     "cap.mudar": "Move to {nome}",
     "fim.resumo": "{d} days · cash {c} · fame {f}",
 
+    # --- campanha: cada regiao e um cenario pra vencer ---
+    "campanha.vencida": "beaten",
+    "campanha.placar": "{n} of {total} regions beaten",
+    "campanha.conquistou": "You conquered the {nome}! {n} of {total} regions beaten.",
+    "campanha.zerou": "You beat all of Brazil!",
+    "campanha.escolher_outra": "Pick another region",
+
     # --- nomes de conteudo (em pt vem de content/; aqui e traducao) ---
     "sabor.coco": "Coconut",
     "sabor.limao": "Lime",

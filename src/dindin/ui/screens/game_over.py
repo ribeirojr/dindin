@@ -6,12 +6,14 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
 from ...i18n import money
+from ...sim import campaign
 
 
 class GameOverScreen(Screen[str]):
-    def __init__(self, state, tr, motivo: str) -> None:
+    def __init__(self, state, tr, motivo: str, conquistas=None) -> None:
         super().__init__()
         self.state, self.tr, self.motivo = state, tr, motivo
+        self.conquistas = campaign.normalizar(conquistas)
 
     def compose(self) -> ComposeResult:
         venceu = self.motivo == "vitoria"
@@ -29,8 +31,20 @@ class GameOverScreen(Screen[str]):
                 f"[dim]Caixa final:[/] {money(self.state.caixa)}\n"
                 f"[dim]Reputação:[/] {self.state.reputacao:.0f}/100\n"
             )
+            if venceu:
+                feitas = campaign.quantas(self.conquistas)
+                total = campaign.total()
+                if campaign.zerou_tudo(self.conquistas):
+                    yield Static(
+                        "[b yellow]Você venceu o Brasil inteiro![/]\n")
+                else:
+                    yield Static(
+                        f"[b green]Região vencida![/] "
+                        f"[dim]{feitas} de {total} no mapa.[/]\n")
             with Horizontal(classes="linha-botoes"):
-                yield Button("Jogar de novo", variant="success", id="denovo")
+                yield Button("Escolher outra região" if venceu
+                             else "Jogar de novo",
+                             variant="success", id="denovo")
                 yield Button("Sair", id="sair")
         yield Footer()
 

@@ -19,7 +19,7 @@ const MODULOS = [
   "sim/__init__.py", "sim/types.py", "sim/models.py", "sim/state.py",
   "sim/rng.py", "sim/demand.py", "sim/weather.py", "sim/calendar.py",
   "sim/freezer.py", "sim/events.py", "sim/economy.py", "sim/engine.py",
-  "sim/progression.py",
+  "sim/progression.py", "sim/campaign.py",
   "content/__init__.py", "content/regions.py", "content/flavors.py",
   "content/ingredients.py", "content/locations.py", "content/event_pool.py",
   "content/coolers.py",
@@ -110,7 +110,15 @@ if "/jogo" not in sys.path:
     return py;
   }
 
-  regioes(lang) { return this._call("regioes", lang ?? "pt"); }
+  regioes(lang, conquistas) {
+    return this._call("regioes", lang ?? "pt", conquistas ?? []);
+  }
+  placarCampanha(conquistas) {
+    return this._call("placar_campanha", conquistas ?? []);
+  }
+  registrarVitoria(conquistas, regiao) {
+    return this._call("registrar_vitoria", conquistas ?? [], regiao);
+  }
   textosBase(lang) { return this._call("textos_base", lang ?? "pt"); }
   catalogo(regiao, desbloqueados, lang) {
     return this._call("catalogo", regiao, desbloqueados ?? null, lang ?? "pt");

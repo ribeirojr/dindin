@@ -176,12 +176,46 @@ header .marca {
 }
 .regiao:hover { border-color: var(--color-accent); transform: translateY(-2px); }
 .regiao.ativa { border-color: var(--color-accent); }
-.regiao .cena-svg { 
-  height: 100px; 
-  width: 100%; 
-  max-width: 320px; 
-  background: #1d2130; 
-  overflow: hidden; 
+.regiao .cena-svg {
+  height: 100px;
+  width: 100%;
+  max-width: 320px;
+  background: #1d2130;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---------- campanha: regiao ja vencida ---------- */
+.selo-vencida {
+  position: absolute; top: 8px; right: 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px 3px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  background: var(--color-green); color: #10241a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
+.regiao.vencida { border-color: var(--color-green); }
+/* Cena mais discreta: o cartao ja foi conquistado, o destaque agora
+ * e pros que faltam. */
+.regiao.vencida .cena-svg svg { opacity: .55; }
+.regiao.vencida:hover .cena-svg svg { opacity: 1; }
+
+.campanha-placar {
+  margin-top: 10px; display: inline-block;
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 700;
+  background: color-mix(in srgb, var(--color-green) 18%, transparent);
+  color: var(--color-green);
+}
+.campanha-placar.zerou, .campanha-fim.zerou {
+  background: color-mix(in srgb, var(--color-gold) 20%, transparent);
+  color: var(--color-gold);
+}
+.campanha-fim {
+  margin: 10px 0 4px; padding: 10px 14px; border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 700;
+  background: color-mix(in srgb, var(--color-green) 15%, transparent);
+  color: var(--color-green);
 }
 .regiao .corpo { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
 .regiao .produto {

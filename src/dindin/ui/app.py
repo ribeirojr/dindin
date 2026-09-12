@@ -5,7 +5,8 @@ from textual.theme import Theme
 
 from ..content.flavors import SABORES
 from ..i18n import Translator
-from ..sim import progression
+from ..persistence import conquistas
+from ..sim import campaign, progression
 from ..sim.engine import advance_day, clima_do_dia, tolerancia_efetiva_do_dia
 from ..sim.economy import comprar, produzir
 from ..sim.freezer import capacidade_dia
@@ -88,8 +89,13 @@ class DindinApp(App[None]):
             self.state = GameState(seed=self.seed, regiao=regiao,
                                    local_atual="casa")
             motivo = await self._campanha()
+            # Vencer a regiao entra no placar da campanha, que vive fora
+            # desta partida (ver persistence/conquistas.py).
+            conquistas_agora = conquistas.carregar()
+            if motivo == "vitoria":
+                conquistas_agora = conquistas.registrar_vitoria(regiao)
             de_novo = await self.push_screen_wait(
-                GameOverScreen(self.state, self.tr, motivo)
+                GameOverScreen(self.state, self.tr, motivo, conquistas_agora)
             )
             if de_novo != "denovo":
                 return

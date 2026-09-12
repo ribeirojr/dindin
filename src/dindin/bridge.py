@@ -18,7 +18,7 @@ from .i18n import REGIOES_I18N, Translator, money
 from .i18n.barks import pool
 from .i18n.base_ptbr import BASE
 from .sim.types import BarkTag
-from .sim import economy, progression
+from .sim import campaign, economy, progression
 from .sim.demand import f_preco, tolerancia_efetiva
 from .sim.engine import advance_day, clima_do_dia, tolerancia_efetiva_do_dia
 from .sim.freezer import capacidade_dia, capacidade_total
@@ -178,8 +178,13 @@ def textos_base(lang: str = "pt") -> dict:
     return {k: base.get(k) or BASE[k] for k in BASE}
 
 
-def regioes(lang: str = "pt") -> list[dict]:
-    """Lista pra tela de escolha, ja com o nome do produto em cada estado."""
+def regioes(lang: str = "pt", conquistas: list[str] | None = None) -> list[dict]:
+    """Lista pra tela de escolha, ja com o nome do produto em cada estado.
+
+    `conquistas`: chaves de regiao ja vencidas (a interface guarda essa
+    lista; aqui ela so vira o campo `vencida` de cada cartao).
+    """
+    feitas = campaign.normalizar(conquistas)
     saida = []
     for key in ORDEM_REGIOES:
         r = REGIOES[key]
@@ -190,6 +195,7 @@ def regioes(lang: str = "pt") -> list[dict]:
         saida.append({
             "key": key, "nome": r.nome, "gentilico": r.gentilico,
             "produto": tr.produto,
+            "vencida": key in feitas,
             "giria": [tr_pt.t("interj.surpresa"), tr_pt.t("interj.positivo"),
                       tr_pt.t("vocativo")],
             "tolerancia": r.tolerancia_preco,
@@ -207,6 +213,34 @@ def regioes(lang: str = "pt") -> list[dict]:
 def novo_jogo(regiao: str, seed: int) -> dict:
     state = GameState(seed=seed, regiao=regiao, local_atual="casa")
     return estado_para_json(state)
+
+
+def registrar_vitoria(conquistas: list[str] | None, regiao: str) -> dict:
+    """Soma uma regiao vencida e devolve o placar da campanha.
+
+    A lista fica com a interface (localStorage no navegador): a ponte so
+    faz a conta, nao guarda nada entre chamadas.
+    """
+    feitas = campaign.registrar_vitoria(conquistas, regiao)
+    return {
+        "conquistas": sorted(feitas),
+        "quantas": len(feitas),
+        "total": campaign.total(),
+        "zerou": campaign.zerou_tudo(feitas),
+        "pendentes": campaign.pendentes(feitas),
+    }
+
+
+def placar_campanha(conquistas: list[str] | None = None) -> dict:
+    """Mesmo resumo do registrar_vitoria, sem marcar nada de novo."""
+    feitas = campaign.normalizar(conquistas)
+    return {
+        "conquistas": sorted(feitas),
+        "quantas": len(feitas),
+        "total": campaign.total(),
+        "zerou": campaign.zerou_tudo(feitas),
+        "pendentes": campaign.pendentes(feitas),
+    }
 
 
 def previsao(estado: dict) -> dict:

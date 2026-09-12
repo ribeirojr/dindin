@@ -27,6 +27,25 @@ let lang = new URLSearchParams(location.search).get("lang") === "en" ? "en" : "p
 // entre sessoes; o padrao e o escuro (o tema original do redesenho).
 let tema = localStorage.getItem("dindin-tema") === "claro" ? "claro" : "escuro";
 document.documentElement.dataset.tema = tema;
+// Regioes ja vencidas. Vive fora da partida (o estado do jogo morre no fim,
+// a conquista fica), por isso mora aqui e nao no GameState.
+let conquistas = carregarConquistas();
+
+function carregarConquistas() {
+  try {
+    const cru = JSON.parse(localStorage.getItem("dindin-conquistas") ?? "[]");
+    return Array.isArray(cru) ? cru.filter((k) => typeof k === "string") : [];
+  } catch {
+    return [];   // storage corrompido nao pode impedir o jogo de abrir
+  }
+}
+
+function salvarConquistas(lista) {
+  conquistas = lista;
+  try {
+    localStorage.setItem("dindin-conquistas", JSON.stringify(lista));
+  } catch { /* modo privado/sem quota: joga sem guardar */ }
+}
 // null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
 let gelo = null;
 // Refaz a tela atual depois de trocar o tema. So telaDia/telaRelatorio tem
@@ -85,7 +104,8 @@ function telaRegioes() {
   redesenharTelaAtual = telaRegioes;
   // Textos neutros (sem sotaque regional) so pra tela de escolha.
   catalogo = { textos: eng.textosBase(lang) };
-  const regioes = eng.regioes(lang);
+  const regioes = eng.regioes(lang, conquistas);
+  const placar = eng.placarCampanha(conquistas);
   const app = $("#app");
   app.innerHTML = "";
 
@@ -114,6 +134,13 @@ function telaRegioes() {
     `<div class="hero-eyebrow">${t("ui.subtitulo")}</div>
      <h1>${t("ui.escolha_regiao")}</h1>
      <p>${t("regiao.subtitulo")}</p>`;
+  if (placar.quantas > 0) {
+    const p = el("div", "campanha-placar" + (placar.zerou ? " zerou" : ""));
+    p.textContent = placar.zerou
+      ? t("campanha.zerou")
+      : t("campanha.placar", { n: placar.quantas, total: placar.total });
+    heroTexto.append(p);
+  }
   const heroCena = el("div", "hero-cena");
   heroCena.innerHTML = CENA_HERO[tema] ?? CENA_HERO.escuro;
   hero.append(heroTexto, heroCena);
@@ -121,9 +148,19 @@ function telaRegioes() {
 
   const grade = el("div", "grade-regioes");
   for (const r of regioes) {
-    const b = el("button", "regiao");
+    const b = el("button", "regiao" + (r.vencida ? " vencida" : ""));
     const cena = el("div", "cena-svg");
     cena.innerHTML = cenaRegiao(r.key, tema);
+    if (r.vencida) {
+      const selo = el("span", "selo-vencida");
+      selo.title = t("campanha.vencida");
+      selo.innerHTML =
+        `<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+           <path d="M4 12.5 L9.5 18 L20 6.5" fill="none" stroke="currentColor"
+                 stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+         </svg><span>${t("campanha.vencida")}</span>`;
+      cena.append(selo);
+    }
     const corpo = el("div", "corpo");
     corpo.innerHTML =
       `<div class="produto">${r.produto}</div>
@@ -931,7 +968,24 @@ function telaFim() {
   c.append(el("p", "sub", t("fim.resumo", {
     d: estado.dia - 1, c: money(estado.caixa), f: Math.round(estado.reputacao),
   })));
-  const b = el("button", "principal", t("ui.denovo"));
+
+  // Vencer a regiao fica registrado na campanha, fora desta partida.
+  if (venceu) {
+    const placar = eng.registrarVitoria(conquistas, estado.regiao);
+    salvarConquistas(placar.conquistas);
+    const nome = (eng.regioes(lang).find((r) => r.key === estado.regiao)
+                  ?? {}).nome ?? estado.regiao;
+    const linha = el("div", "campanha-fim" + (placar.zerou ? " zerou" : ""));
+    linha.textContent = placar.zerou
+      ? t("campanha.zerou")
+      : t("campanha.conquistou", {
+          nome, n: placar.quantas, total: placar.total,
+        });
+    c.append(linha);
+  }
+
+  const b = el("button", "principal",
+                venceu ? t("campanha.escolher_outra") : t("ui.denovo"));
   b.onclick = telaRegioes;
   c.append(b);
   app.append(c);

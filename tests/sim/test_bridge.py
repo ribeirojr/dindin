@@ -304,3 +304,31 @@ def test_isopores_e_sabores_do_jogador_em_ingles():
                for r in coco["receita"])
     assert coco["faltando"], "sem estoque, lista o que falta (em ingles)"
     assert "Sugar" in coco["faltando"]
+
+
+def test_regioes_marca_as_vencidas():
+    todas = bridge.regioes(conquistas=["ce", "df"])
+    vencidas = {r["key"] for r in todas if r["vencida"]}
+    assert vencidas == {"ce", "df"}
+    assert all("vencida" in r for r in todas)
+
+
+def test_regioes_sem_conquistas_nao_marca_nenhuma():
+    assert not any(r["vencida"] for r in bridge.regioes())
+
+
+def test_registrar_vitoria_atravessa_json():
+    out = bridge.registrar_vitoria(["ce"], "rj")
+    assert json.loads(json.dumps(out)) == out
+    assert out["conquistas"] == ["ce", "rj"]
+    assert out["quantas"] == 2
+    assert out["total"] == len(bridge.regioes())
+    assert not out["zerou"]
+    assert "ce" not in out["pendentes"]
+
+
+def test_placar_zera_quando_vence_todas():
+    chaves = [r["key"] for r in bridge.regioes()]
+    out = bridge.placar_campanha(chaves)
+    assert out["zerou"]
+    assert out["pendentes"] == []

@@ -238,6 +238,13 @@ BASE: dict[str, str] = {
     "cap.det": "entrada {v}, movimento {n}/dia.",
     "cap.mudar": "Mudar pra {nome}",
     "fim.resumo": "{d} dias · caixa {c} · fama {f}",
+
+    # --- campanha: cada regiao e um cenario pra vencer ---
+    "campanha.vencida": "vencida",
+    "campanha.placar": "{n} de {total} regiões vencidas",
+    "campanha.conquistou": "Você dominou o {nome}! {n} de {total} regiões vencidas.",
+    "campanha.zerou": "Você venceu o Brasil inteiro!",
+    "campanha.escolher_outra": "Escolher outra região",
 }
 
 
