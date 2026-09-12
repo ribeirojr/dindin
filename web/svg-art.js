@@ -216,15 +216,29 @@ export const CENA_REGIAO = {
     df: `
 <svg viewBox="0 0 320 112" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Brasilia: Congresso Nacional ao entardecer, espelho d'agua">
   <rect width="320" height="112" fill="#1c2033"></rect>
-  <circle cx="256" cy="30" r="22" fill="#e8c07a" opacity="0.8"></circle>
-  <rect x="128" y="52" width="10" height="30" fill="#2e3346"></rect>
-  <rect x="182" y="46" width="10" height="36" fill="#2e3346"></rect>
-  <rect x="86" y="72" width="148" height="10" fill="#262a3c"></rect>
-  <ellipse cx="98" cy="64" rx="20" ry="9" fill="#343a52"></ellipse>
-  <path d="M198,72 a24,15 0 0 1 48,0 Z" fill="#3a4058"></path>
-  <rect y="82" width="320" height="30" fill="#171a28"></rect>
-  <path d="M0,84 H320" stroke="#9184d9" stroke-width="1.5" opacity="0.4"></path>
-  <path d="M40,92 q12,-5 24,0 t24,0 M180,96 q12,-5 24,0 t24,0" stroke="#2c3a52" stroke-width="2" fill="none"></path>
+  <circle cx="278" cy="24" r="15" fill="#e8c07a" opacity="0.85"></circle>
+  <circle cx="278" cy="24" r="26" fill="#e8c07a" opacity="0.08"></circle>
+  <g fill="#e8c07a" opacity="0.30">
+    <circle cx="42" cy="18" r="1.4"></circle>
+    <circle cx="88" cy="12" r="1.1"></circle>
+    <circle cx="120" cy="30" r="1.2"></circle>
+    <circle cx="196" cy="14" r="1"></circle>
+    <circle cx="228" cy="42" r="1.1"></circle>
+  </g>
+  <g fill="#3c4470">
+    <rect x="151" y="16" width="8" height="46"></rect>
+    <rect x="161" y="16" width="8" height="46"></rect>
+  </g>
+  <path d="M74,44 Q100,80 126,44 Z" fill="#333b60"></path>
+  <path d="M192,62 Q220,40 248,62 Z" fill="#4d5788"></path>
+  <rect x="30" y="62" width="260" height="6" fill="#2b3150"></rect>
+  <rect y="68" width="320" height="44" fill="#141726"></rect>
+  <g opacity="0.3">
+    <path d="M192,76 Q220,92 248,76 Z" fill="#4d5788"></path>
+    <rect x="151" y="76" width="8" height="10" fill="#3c4470"></rect>
+    <rect x="161" y="76" width="8" height="10" fill="#3c4470"></rect>
+  </g>
+  <path d="M16,84 q14,-4 28,0 t28,0 M252,96 q14,-4 28,0 t28,0" stroke="#9184d9" stroke-width="1.5" fill="none" opacity="0.3"></path>
 </svg>`,
   },
   claro: {
@@ -341,15 +355,27 @@ export const CENA_REGIAO = {
     df: `
 <svg viewBox="0 0 320 112" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Brasilia: Congresso Nacional sob ceu azul, espelho d'agua">
   <rect width="320" height="112" fill="#a9ddf3"></rect>
-  <circle cx="256" cy="26" r="18" fill="#ffdf00"></circle>
-  <rect x="128" y="52" width="10" height="30" fill="#ffffff"></rect>
-  <rect x="182" y="46" width="10" height="36" fill="#ffffff"></rect>
-  <rect x="86" y="72" width="148" height="10" fill="#f4eeda"></rect>
-  <ellipse cx="98" cy="64" rx="20" ry="9" fill="#e9e0c4"></ellipse>
-  <path d="M198,72 a24,15 0 0 1 48,0 Z" fill="#f4eeda"></path>
-  <rect y="82" width="320" height="30" fill="#1f9bc4"></rect>
-  <path d="M0,84 H320" stroke="#bfeaf7" stroke-width="1.5" opacity="0.8"></path>
-  <path d="M40,92 q12,-5 24,0 t24,0 M180,96 q12,-5 24,0 t24,0" stroke="#bfeaf7" stroke-width="2" fill="none"></path>
+  <circle cx="278" cy="22" r="13" fill="#ffdf00"></circle>
+  <circle cx="278" cy="22" r="22" fill="#ffdf00" opacity="0.22"></circle>
+  <g fill="#ffffff" opacity="0.8">
+    <ellipse cx="52" cy="22" rx="20" ry="7"></ellipse>
+    <ellipse cx="68" cy="19" rx="13" ry="8"></ellipse>
+    <ellipse cx="206" cy="16" rx="15" ry="6"></ellipse>
+  </g>
+  <g fill="#ffffff">
+    <rect x="151" y="16" width="8" height="46"></rect>
+    <rect x="161" y="16" width="8" height="46"></rect>
+  </g>
+  <path d="M74,44 Q100,80 126,44 Z" fill="#dde4ea"></path>
+  <path d="M192,62 Q220,40 248,62 Z" fill="#ffffff"></path>
+  <rect x="30" y="62" width="260" height="6" fill="#eef2f6"></rect>
+  <rect y="68" width="320" height="44" fill="#1f9bc4"></rect>
+  <g opacity="0.26">
+    <path d="M192,76 Q220,92 248,76 Z" fill="#ffffff"></path>
+    <rect x="151" y="76" width="8" height="10" fill="#ffffff"></rect>
+    <rect x="161" y="76" width="8" height="10" fill="#ffffff"></rect>
+  </g>
+  <path d="M16,84 q14,-4 28,0 t28,0 M252,96 q14,-4 28,0 t28,0" stroke="#bfeaf7" stroke-width="1.5" fill="none"></path>
 </svg>`,
   },
 };
