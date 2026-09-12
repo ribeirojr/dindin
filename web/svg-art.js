@@ -234,6 +234,7 @@ export const CENA_REGIAO = {
   <rect x="30" y="62" width="260" height="6" fill="#2b3150"></rect>
   <rect y="68" width="320" height="44" fill="#141726"></rect>
   <g opacity="0.3">
+    <path d="M74,89 Q100,63 126,89 Z" fill="#333b60"></path>
     <path d="M192,76 Q220,92 248,76 Z" fill="#4d5788"></path>
     <rect x="151" y="76" width="8" height="10" fill="#3c4470"></rect>
     <rect x="161" y="76" width="8" height="10" fill="#3c4470"></rect>
@@ -371,6 +372,7 @@ export const CENA_REGIAO = {
   <rect x="30" y="62" width="260" height="6" fill="#eef2f6"></rect>
   <rect y="68" width="320" height="44" fill="#1f9bc4"></rect>
   <g opacity="0.26">
+    <path d="M74,89 Q100,63 126,89 Z" fill="#dde4ea"></path>
     <path d="M192,76 Q220,92 248,76 Z" fill="#ffffff"></path>
     <rect x="151" y="76" width="8" height="10" fill="#ffffff"></rect>
     <rect x="161" y="76" width="8" height="10" fill="#ffffff"></rect>
