@@ -36,6 +36,28 @@
   --borda: var(--color-divider);
 }
 
+/* "Modo bandeira": tema claro com a paleta da bandeira do Brasil
+ * (verde 009c3b, amarelo ffdf00, azul 002776). So retoca as variaveis --
+ * o resto da folha ja usa var(--color-*), entao herda sozinho. */
+[data-tema="claro"] {
+  --color-bg: #fbf8ec;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0ecd8;
+  --color-divider: rgba(0, 39, 118, .18);
+  --color-text: #002776;
+  --color-neutral-300: #123a86;
+  --color-neutral-400: #2d508f;
+  --color-neutral-500: #4a659d;
+  --color-neutral-600: #5c73a6;
+  --color-neutral-900: #eceedf;
+  --color-accent: #00762c;
+  --color-accent-300: #005c22;
+  --color-accent-700: #009c3b;
+  --color-gold: #c2703f;
+  --color-rose: #b3574f;
+  --color-green: #00762c;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -90,6 +112,9 @@ header .marca {
 .stats { display: flex; gap: 16px; margin-left: auto; flex-wrap: wrap; }
 .stat b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
 .stat span { font-size: 11px; color: var(--color-accent); text-transform: uppercase; letter-spacing: .08em }
+.stat-clima b { display: flex; align-items: center; gap: 6px; }
+.stat-clima .icone { font-size: 15px; line-height: 1; }
+.stat-clima span { color: var(--color-neutral-500); text-transform: none; letter-spacing: 0; }
 
 /* ---------- cartoes ---------- */
 .cartao {
@@ -509,6 +534,15 @@ button.sugestao {
 .lang-chip.ativa {
   border-color: var(--color-accent); color: var(--color-accent-300); font-weight: 700;
 }
+
+/* ---------- alternar tema ("modo bandeira") ---------- */
+.tema-toggle {
+  font: inherit; font-size: 12px; padding: 7px 14px; border-radius: 8px;
+  border: 1px solid var(--color-divider); background: transparent;
+  color: var(--color-neutral-400); cursor: pointer;
+}
+.tema-toggle:hover { border-color: var(--color-accent); color: var(--color-text); }
+header .tema-toggle { margin-left: 6px; }
 
 /* ---------- telas pequenas (celular) ----------
  * O layout de 960px afogava um celular de 360px: tabela de 5 colunas com

@@ -3,7 +3,7 @@
  * Este arquivo NAO sabe nenhuma regra do jogo: so desenha o que a bridge devolve.
  */
 import { DindinEngine } from "./pyodide-bridge.js";
-import { CENA_HERO, CENA_RELATORIO, cenaLocal, cenaRegiao } from "./svg-art.js";
+import { CENA_HERO, CENA_RELATORIO, CENA_FILA, cenaLocal, cenaRegiao } from "./svg-art.js";
 
 const eng = new DindinEngine();
 const $ = (s) => document.querySelector(s);
@@ -23,8 +23,15 @@ let estado = null, catalogo = null, carrinho = {}, producao = {},
     precos = {}, tempos = null, saboresDoDia = [];
 // Idioma da interface. Nome do produto e girias ficam regionais sempre.
 let lang = new URLSearchParams(location.search).get("lang") === "en" ? "en" : "pt";
+// "Modo bandeira": tema claro com a paleta da bandeira do Brasil. Lembrado
+// entre sessoes; o padrao e o escuro (o tema original do redesenho).
+let tema = localStorage.getItem("dindin-tema") === "claro" ? "claro" : "escuro";
+document.documentElement.dataset.tema = tema;
 // null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
 let gelo = null;
+// Refaz a tela atual depois de trocar o tema. So telaDia/telaRelatorio tem
+// cabecalho (com o botao de tema), entao so elas precisam se registrar aqui.
+let redesenharTelaAtual = () => {};
 // Contador de passos do dia: cartoes aparecem/somem conforme o local.
 let passoN = 0;
 const tit = (nome) => `${++passoN}. ${nome}`;
@@ -75,13 +82,14 @@ async function boot() {
 
 // ------------------------------------------------------------------ telas
 function telaRegioes() {
+  redesenharTelaAtual = telaRegioes;
   // Textos neutros (sem sotaque regional) so pra tela de escolha.
   catalogo = { textos: eng.textosBase(lang) };
   const regioes = eng.regioes(lang);
   const app = $("#app");
   app.innerHTML = "";
 
-  // O seletor de idioma: unico texto bilingue fixo da tela.
+  // O seletor de idioma + tema: controles fixos no topo da tela.
   const picker = el("div", "lang-picker");
   for (const [codigo, rotulo] of [["pt", "Português"], ["en", "English"]]) {
     const chip = el("button", "lang-chip" + (lang === codigo ? " ativa" : ""),
@@ -96,6 +104,7 @@ function telaRegioes() {
     };
     picker.append(chip);
   }
+  picker.append(botaoTema());
   app.append(picker);
 
   // --- hero: titulo grande + cena de abertura
@@ -106,7 +115,7 @@ function telaRegioes() {
      <h1>${t("ui.escolha_regiao")}</h1>
      <p>${t("regiao.subtitulo")}</p>`;
   const heroCena = el("div", "hero-cena");
-  heroCena.innerHTML = CENA_HERO;
+  heroCena.innerHTML = CENA_HERO[tema] ?? CENA_HERO.escuro;
   hero.append(heroTexto, heroCena);
   app.append(hero);
 
@@ -114,7 +123,7 @@ function telaRegioes() {
   for (const r of regioes) {
     const b = el("button", "regiao");
     const cena = el("div", "cena-svg");
-    cena.innerHTML = cenaRegiao(r.key);
+    cena.innerHTML = cenaRegiao(r.key, tema);
     const corpo = el("div", "corpo");
     corpo.innerHTML =
       `<div class="produto">${r.produto}</div>
@@ -140,7 +149,7 @@ function comecar(regiao) {
   telaDia();
 }
 
-function cabecalho() {
+function cabecalho(clima) {
   const h = el("header");
   h.append(el("div", "marca", `DinDin · ${catalogo.produto.plur}`));
   const s = el("div", "stats");
@@ -149,22 +158,45 @@ function cabecalho() {
     d.append(el("b", null, val), el("span", null, rot));
     s.append(d);
   };
+  const c = clima ?? eng.previsao(estado);
+  const dClima = el("div", "stat stat-clima");
+  dClima.innerHTML =
+    `<b><span class="icone">${ICONE[c.kind] ?? "☀️"}</span>${Math.round(c.temp_c)}°C</b>
+     <span>${t("clima." + c.kind)}</span>`;
+  s.append(dClima);
   add(t("ui.dia"), estado.dia);
   add(t("ui.caixa"), money(estado.caixa));
   add(t("ui.fama"), Math.round(estado.reputacao));
   add(t("ui.ponto"), t(`local.${estado.local_atual}`));
   h.append(s);
+  h.append(botaoTema());
   return h;
 }
 
+/** Alterna entre o tema escuro (padrao) e o "modo bandeira" (claro). */
+function botaoTema() {
+  const b = el("button", "tema-toggle",
+    tema === "claro" ? t("ui.modo_noite") : t("ui.modo_bandeira"));
+  b.onclick = alternarTema;
+  return b;
+}
+
+function alternarTema() {
+  tema = tema === "claro" ? "escuro" : "claro";
+  localStorage.setItem("dindin-tema", tema);
+  document.documentElement.dataset.tema = tema;
+  redesenharTelaAtual();
+}
+
 function telaDia() {
+  redesenharTelaAtual = telaDia;
   const clima = eng.previsao(estado);
   carrinho = {}; producao = {}; precos = {}; gelo = null; passoN = 0;
   saboresDoDia = eng.sabores(estado, {}, {}, lang);
 
   const app = $("#app");
   app.innerHTML = "";
-  app.append(cabecalho());
+  app.append(cabecalho(clima));
 
   // --- tira de pontos: onde a campanha ja te deixa vender
   app.append(tiraDePontos());
@@ -180,7 +212,7 @@ function telaDia() {
   pl.append(el("p", "sub", t("ui.antes")));
   const plGrid = el("div", "plano-grid");
   const cena = el("div", "cena-svg cena");
-  cena.innerHTML = cenaLocal(estado.local_atual);
+  cena.innerHTML = cenaLocal(estado.local_atual, tema);
   const local0 = catalogo.locais.find((l) => l.key === estado.local_atual);
   const falta = Math.max(0, local0.meta - estado.caixa);
   const resumo = el("div", "plano-resumo");
@@ -726,9 +758,10 @@ function rodarDia() {
 }
 
 function telaRelatorio(r, desbloqueou) {
+  redesenharTelaAtual = () => telaRelatorio(r, desbloqueou);
   const app = $("#app");
   app.innerHTML = "";
-  app.append(cabecalho());
+  app.append(cabecalho(r.clima));
 
   // --- hero: titulo do resultado + cena de fechamento
   const local = catalogo.locais.find((l) => l.key === estado.local_atual);
@@ -741,7 +774,7 @@ function telaRelatorio(r, desbloqueou) {
   hClima.innerHTML = t("rel.titulo");
   heroTexto.append(hClima);
   const heroCena = el("div", "cena-svg");
-  heroCena.innerHTML = CENA_RELATORIO;
+  heroCena.innerHTML = CENA_RELATORIO[tema] ?? CENA_RELATORIO.escuro;
   hero.append(heroTexto, heroCena);
   app.append(hero);
 
@@ -835,6 +868,10 @@ function telaRelatorio(r, desbloqueou) {
     });
     falasCard.append(f);
     sidebar.append(falasCard);
+
+    const filaCena = el("div", "cena-svg");
+    filaCena.innerHTML = CENA_FILA[tema] ?? CENA_FILA.escuro;
+    sidebar.append(filaCena);
   }
 
   if (desbloqueou) {

@@ -29,6 +29,8 @@ BASE_EN: dict[str, str] = {
     "ui.confirmar": "Confirm",
     "ui.bora": "Let's go!",
     "ui.proximo_dia": "Next day",
+    "ui.modo_bandeira": "Flag mode",
+    "ui.modo_noite": "Night mode",
     "ui.escolha_regiao": "Pick a city to play at!",
     "ui.dia": "Day",
     "ui.caixa": "Cash",
