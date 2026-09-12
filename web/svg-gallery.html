@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>dindin svg feed • 2006 style</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  :root {
+    --bg: #0a0e1f; --text: #a0b0ff; --card: #1a2338; --border: #00a2ff; --accent: #ff00aa;
+  }
+  [data-theme="light"] {
+    --bg: #e6f0e6; --text: #002776; --card: #fffdf0; --border: #009c3b; --accent: #ffdf00;
+  }
+  body {
+    margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Press Start 2P', system-ui;
+    image-rendering:pixelated; line-height:1.4; transition:background 0.4s;
+  }
+  .header {
+    background:linear-gradient(var(--accent), #002776); padding:12px; text-align:center; color:white;
+    border-bottom:4px solid var(--border); box-shadow:0 4px 0 #000;
+  }
+  .tweet {
+    background:var(--card); margin:16px auto; max-width:420px; border:3px solid var(--border);
+    box-shadow:4px 4px 0 #000; padding:12px; position:relative;
+  }
+  .tweet-header { display:flex; justify-content:space-between; font-size:10px; margin-bottom:8px; color:var(--accent); }
+  .avatar {
+    width:32px; height:32px; background:var(--accent); border:2px solid #fff; float:left;
+    margin-right:8px; image-rendering:pixelated;
+  }
+  .svg-container {
+    background:#0f1628; padding:12px; border:2px solid var(--border); margin:8px 0;
+    min-height:220px; display:flex; align-items:center; justify-content:center;
+  }
+  [data-theme="light"] .svg-container { background:#f0f7e8; }
+  .svg-container svg { max-width:100%; height:auto; filter:drop-shadow(2px 3px 2px #000); }
+  .caption { font-size:11px; color:var(--text); margin:8px 0 4px; }
+  .meta { font-size:9px; color:var(--border); text-align:right; }
+  .toggle {
+    position:fixed; top:18px; right:20px; background:var(--accent); color:white; border:none;
+    padding:6px 14px; font-size:10px; cursor:pointer; box-shadow:3px 3px 0 #000;
+    font-family:inherit;
+  }
+  .toggle:active { transform:translate(2px,2px); box-shadow:0 0 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🔵 DINDIN PIX • 2006</h1>
+  <p style="font-size:10px;margin:4px 0 0;">vinhetas do brasil profundo • sem disney</p>
+</div>
+
+<button class="toggle" onclick="toggleTheme()">🌗 BR MODE</button>
+
+<div id="feed"></div>
+
+<div id="feed"></div>
+
+<script type="module">
+import { CENA_HERO, CENA_REGIAO, CENA_LOCAL, CENA_RELATORIO } from './svg-art.js';
+
+const scenes = [
+  { key: 'hero', title: 'HERO — fim de tarde na rua', svg: CENA_HERO, desc: 'Criançada com dindin na mão, isopor largado na calçada. 1997.' },
+  ...Object.entries(CENA_REGIAO).map(([k,v]) => ({
+    key: `regiao-${k}`, title: `REGIÃO ${k.toUpperCase()}`, svg: v, desc: 'Cena típica do estado. Sol de rachar.'
+  })),
+  ...Object.entries(CENA_LOCAL).map(([k,v]) => ({
+    key: `local-${k}`, title: `LOCAL ${k.toUpperCase()}`, svg: v, desc: 'Ponto de venda ou preparo. Sobrevivência diária.'
+  })),
+  { key: 'relatorio', title: 'RELATÓRIO — fim de dia', svg: CENA_RELATORIO, desc: 'Isopor quase vazio, sol se pondo. Lucro ou prejuízo.' }
+];
+
+const feed = document.getElementById('feed');
+
+scenes.forEach(s => {
+  const div = document.createElement('div');
+  div.className = 'tweet';
+  div.innerHTML = `
+    <div class="tweet-header">
+      <div><span class="avatar"></span><b>@dindin_real</b> · ${new Date().toLocaleDateString('pt-BR')}</div>
+    </div>
+    <div class="svg-container">${s.svg}</div>
+    <div class="caption"><b>${s.title}</b><br>${s.desc}</div>
+    <div class="meta">#PicoléNosAnos90 #IsoporNaRua #Sobrevivencia #SemDisney</div>
+  `;
+  feed.appendChild(div);
+});
+
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+  const btn = document.querySelector('.toggle');
+  btn.textContent = isLight ? '🌗 BR MODE' : '🌑 DARK';
+}
+</script>
+</body>
+</html>

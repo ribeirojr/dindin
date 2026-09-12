@@ -215,7 +215,15 @@ BASE: dict[str, str] = {
     "gelo.nada": "Nada pra gelar ainda.",
     "gelo.atalho": "Levar {n} e não perder nada",
 
+    # --- web: barra lateral do dia ---
+    "dia.resumo_titulo": "O dia até agora",
+    "dia.resumo_feira": "Compra na feira",
+    "dia.resumo_gelo": "Gelo",
+    "dia.resumo_vai": "Vai pro isopor",
+    "dia.resumo_sobra": "Sobra no caixa",
+
     # --- web: relatorio e fim ---
+    "rel.na_fila": "Na fila",
     "rel.queria_curto": "Queriam",
     "rel.derreteu_aviso": "Derreteu {n} unidade(s). Mais gelo "
                           "(ou um isopor melhor) segura o estoque.",

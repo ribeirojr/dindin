@@ -40,12 +40,15 @@ const erros = [];
 window.addEventListener("error", (e) => erros.push(e.message));
 
 // carrega app.js trocando o boot automatico por um controlado
+const svgArt = await import(new URL("../../web/svg-art.js", import.meta.url).href);
 let src = readFileSync("web/app.js", "utf8")
   .replace('import { DindinEngine } from "./pyodide-bridge.js";', "")
+  .replace('import { CENA_HERO, CENA_RELATORIO, cenaLocal, cenaRegiao } from "./svg-art.js";', "")
   .replace("const eng = new DindinEngine();", "")
   .replace(/\nboot\(\);\s*$/, "\nglobalThis.__api = { telaRegioes, telaDia, comecar, recarregarCozinha, dicaReceita };\n");
-const mod = new Function("eng", "__t", src.replace("tempos = null", "tempos = __t") + "\nreturn globalThis.__api;");
-const api = mod(eng, eng.tempos);
+const mod = new Function("eng", "__t", "CENA_HERO", "CENA_RELATORIO", "cenaLocal", "cenaRegiao",
+  src.replace("tempos = null", "tempos = __t") + "\nreturn globalThis.__api;");
+const api = mod(eng, eng.tempos, svgArt.CENA_HERO, svgArt.CENA_RELATORIO, svgArt.cenaLocal, svgArt.cenaRegiao);
 
 const $ = (s) => window.document.querySelector(s);
 const $$ = (s) => [...window.document.querySelectorAll(s)];
@@ -61,9 +64,12 @@ console.log("  cabecalho:", $("header .marca")?.textContent);
 console.log("  cartoes na tela:", $$(".cartao h2").map(h=>h.textContent).join(" | "));
 
 console.log("\n=== 3. O BUG: 'Da pra fazer' antes de comprar ===");
+api.recarregarCozinha(); // ensure table is populated in new layout
 const linhasAntes = $$("#corpo-cozinha tr").slice(0,3).map(tr=>{
   const td=[...tr.querySelectorAll("td")];
-  return `${td[0].textContent.trim().replace("?","")} -> ${td[2].textContent}`;
+  const nome = td[0]?.textContent.trim().replace("?","") || "";
+  const pronto = td[2]?.textContent.trim() || "0";
+  return `${nome} -> ${pronto}`;
 });
 console.log("  " + linhasAntes.join("\n  "));
 
@@ -83,9 +89,12 @@ clicar("Saquinhos", 1);
 console.log("  total da feira:", $("#total-feira")?.textContent.trim());
 
 console.log("\n=== 5. 'Da pra fazer' DEPOIS de encher o carrinho ===");
+api.recarregarCozinha();
 const linhasDepois = $$("#corpo-cozinha tr").slice(0,3).map(tr=>{
   const td=[...tr.querySelectorAll("td")];
-  return `${td[0].textContent.trim().replace("?","")} -> ${td[2].textContent}`;
+  const nome = td[0]?.textContent.trim().replace("?","") || "";
+  const pronto = td[2]?.textContent.trim() || "0";
+  return `${nome} -> ${pronto}`;
 });
 console.log("  " + linhasDepois.join("\n  "));
 console.log("\n  MUDOU?", JSON.stringify(linhasAntes)!==JSON.stringify(linhasDepois) ? "SIM ✓" : "NAO ✗");

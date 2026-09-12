@@ -3,6 +3,7 @@
  * Este arquivo NAO sabe nenhuma regra do jogo: so desenha o que a bridge devolve.
  */
 import { DindinEngine } from "./pyodide-bridge.js";
+import { CENA_HERO, CENA_RELATORIO, cenaLocal, cenaRegiao } from "./svg-art.js";
 
 const eng = new DindinEngine();
 const $ = (s) => document.querySelector(s);
@@ -11,44 +12,6 @@ const el = (t, c, txt) => {
   if (c) e.className = c;
   if (txt != null) e.textContent = txt;
   return e;
-};
-
-// Desenho do ponto de venda, igual ao do terminal.
-const CENAS = {
-  casa: `    ┌───────────────┐
-    │  ▄▄▄▄▄▄▄▄▄▄▄  │
-    │  █ FREEZER █  │
-    │  █ ░░░░░░░ █  │
-    │  ▀▀▀▀▀▀▀▀▀▀▀  │
-    │   cozinha     │
-    └───────────────┘`,
-  isopor: `       ___________
-      /  ISOPOR  /|
-     /__________/ |
-     |░░░░░░░░░| /
-     |_________|/
-   ─────────────────
-       calçada`,
-  praia: `  ~  ~   ~   ~   ~  ~
-~~~~~~~~~~~~~~~~~~~~~~~
-   ___________
-  /  ISOPOR  /|    __
- /__________/ |   /  \\
- |░░░░░░░░░| /   |    |
- |_________|/     areia`,
-  escola: ` ╔═══════════════════╗
- ║  ESCOLA MUNICIPAL ║
- ╚═══════════════════╝
-   ▌▌▌ portão ▌▌▌
-    ___________
-   /  ISOPOR  /|
-  /__________/ |`,
-  carrinho: `  ╔═══════════════════╗
-  ║   ★  DINDIN  ★    ║
-  ╠═══════════════════╣
-  ║ ░░░░░░░░░░░░░░░░░ ║
-  ╚═══════════════════╝
-     ◯           ◯`,
 };
 
 const ICONE = {
@@ -118,8 +81,6 @@ function telaRegioes() {
   const app = $("#app");
   app.innerHTML = "";
 
-  const c = el("div", "cartao");
-
   // O seletor de idioma: unico texto bilingue fixo da tela.
   const picker = el("div", "lang-picker");
   for (const [codigo, rotulo] of [["pt", "Português"], ["en", "English"]]) {
@@ -135,24 +96,36 @@ function telaRegioes() {
     };
     picker.append(chip);
   }
-  c.append(picker);
+  app.append(picker);
 
-  c.append(el("h2", null, t("ui.escolha_regiao")));
-  c.append(el("p", "sub", t("regiao.subtitulo")));
+  // --- hero: titulo grande + cena de abertura
+  const hero = el("div", "hero");
+  const heroTexto = el("div", "hero-texto");
+  heroTexto.innerHTML =
+    `<div class="hero-eyebrow">${t("ui.subtitulo")}</div>
+     <h1>${t("ui.escolha_regiao")}</h1>
+     <p>${t("regiao.subtitulo")}</p>`;
+  const heroCena = el("div", "hero-cena");
+  heroCena.innerHTML = CENA_HERO;
+  hero.append(heroTexto, heroCena);
+  app.append(hero);
 
   const grade = el("div", "grade-regioes");
   for (const r of regioes) {
     const b = el("button", "regiao");
-    b.innerHTML =
+    const cena = el("div", "cena-svg");
+    cena.innerHTML = cenaRegiao(r.key);
+    const corpo = el("div", "corpo");
+    corpo.innerHTML =
       `<div class="produto">${r.produto}</div>
        <div class="uf">${r.nome} · ${r.gentilico}</div>
        <div class="giria">"${r.giria.join('", "')}"</div>
        <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>`;
+    b.append(cena, corpo);
     b.onclick = () => comecar(r.key);
     grade.append(b);
   }
-  c.append(grade);
-  app.append(c);
+  app.append(grade);
   app.append(caixaBench());
 }
 
@@ -193,14 +166,21 @@ function telaDia() {
   app.innerHTML = "";
   app.append(cabecalho());
 
+  // --- tira de pontos: onde a campanha ja te deixa vender
+  app.append(tiraDePontos());
+
+  const layout = el("div", "dia-layout");
+  const coluna = el("div", "dia-coluna");
+  layout.append(coluna);
+
   // --- plano do dia: onde voce esta + como esta o tempo
   const pl = el("div", "cartao");
   pl.append(el("h2", null,
     `${t("ui.dia")} ${estado.dia} · ${t("local." + estado.local_atual)}`));
   pl.append(el("p", "sub", t("ui.antes")));
   const plGrid = el("div", "plano-grid");
-  const cena = el("pre", "cena");
-  cena.textContent = CENAS[estado.local_atual] ?? CENAS.casa;
+  const cena = el("div", "cena-svg cena");
+  cena.innerHTML = cenaLocal(estado.local_atual);
   const local0 = catalogo.locais.find((l) => l.key === estado.local_atual);
   const falta = Math.max(0, local0.meta - estado.caixa);
   const resumo = el("div", "plano-resumo");
@@ -215,7 +195,7 @@ function telaDia() {
   plGrid.append(cena, resumo);
   pl.append(plGrid);
   pl.append(el("div", "aviso", t(`dica.${estado.local_atual}`)));
-  app.append(pl);
+  coluna.append(pl);
 
   // --- clima
   const cc = el("div", "cartao");
@@ -229,28 +209,88 @@ function telaDia() {
        <div class="dica" style="color:${dicaCor(clima)}">${dicaTexto(clima)}</div>
      </div>`;
   cc.append(cl);
-  app.append(cc);
+  coluna.append(cc);
 
   // --- isopor (equipamento, antes de gastar na feira)
   const iso = cartaoIsopor();
-  if (iso) app.append(iso);
+  if (iso) coluna.append(iso);
   // --- feira
-  app.append(cartaoFeira());
+  coluna.append(cartaoFeira());
   // --- cozinha
-  app.append(cartaoCozinha());
+  coluna.append(cartaoCozinha());
   // --- preco (com o grafico)
-  app.append(cartaoPreco(saboresDoDia));
+  coluna.append(cartaoPreco(saboresDoDia));
   // --- gelo (depende do quanto foi produzido)
   const gl = cartaoGelo();
-  if (gl) app.append(gl);
+  if (gl) coluna.append(gl);
   // Monta a tabela ja: esperar timeout deixava a cozinha vazia num primeiro frame.
   recarregarCozinha();
 
-  const acoes = el("div", "linha-acoes");
+  layout.append(sidebarDia(local0));
+  app.append(layout);
+}
+
+/** Tira de status: onde a progressao ja libera vender, ponto atual em destaque. */
+function tiraDePontos() {
+  const c = el("div", "cartao pontos-tira");
+  c.append(el("span", "rotulo", t("ui.ponto")));
+  const lista = el("div", "lista");
+  for (const l of catalogo.locais) {
+    const liberado = estado.locais_desbloqueados.includes(l.key);
+    const atual = l.key === estado.local_atual;
+    const chip = el("span", "ponto-chip" +
+      (atual ? " atual" : liberado ? "" : " bloqueado"));
+    chip.innerHTML = `${l.nome}` +
+      (atual ? ` <span class="tag">${t("ui.dia")} ${estado.dia}</span>` : "");
+    lista.append(chip);
+  }
+  c.append(lista);
+  return c;
+}
+
+/** Resumo fixo do dia + botao de vender, ao lado dos cartoes na tela larga. */
+function sidebarDia(local0) {
+  const sb = el("div", "sidebar-dia");
+  sb.id = "sidebar-dia";
+  sb.append(el("div", "eyebrow", t("dia.resumo_titulo")));
+  const corpo = el("div");
+  corpo.id = "sidebar-dia-corpo";
+  sb.append(corpo);
   const vender = el("button", "principal", t("ui.vender"));
   vender.onclick = rodarDia;
-  acoes.append(vender);
-  app.append(acoes);
+  sb.append(vender);
+  setTimeout(atualizarSidebarDia, 0);
+  return sb;
+}
+
+/** Refaz os totais da barra lateral com o que ja foi decidido no dia. */
+function atualizarSidebarDia() {
+  const corpo = $("#sidebar-dia-corpo");
+  if (!corpo) return;
+  const local0 = catalogo.locais.find((l) => l.key === estado.local_atual);
+  const custoFeira = custoCarrinho();
+  const unidades = unidadesDoDia();
+  const sacos = gelo ?? 0;
+  const precoSaco = estado.local_atual === "casa" ? 0
+    : eng.infoDoGelo(estado, unidades).preco_saco;
+  const custoGelo = sacos * precoSaco;
+  const sobra = estado.caixa - custoFeira - custoGelo;
+
+  corpo.innerHTML = "";
+  const linha = (rot, val) => {
+    const d = el("div", "linha");
+    d.innerHTML = `<span>${rot}</span><b>${val}</b>`;
+    corpo.append(d);
+  };
+  linha(t("dia.resumo_feira"), money(custoFeira));
+  if (estado.local_atual !== "casa") linha(t("dia.resumo_gelo"), money(custoGelo));
+  linha(t("dia.resumo_vai"), unidades);
+  linha(t("dia.resumo_sobra"), money(sobra));
+  corpo.append(el("div", "nota", t(`dica.${estado.local_atual}`)));
+  const meta = Math.min(100, Math.round(100 * estado.caixa / local0.meta));
+  const bm = el("div", "barra-meta");
+  bm.innerHTML = `<i style="width:${meta}%"></i>`;
+  corpo.append(bm);
 }
 
 function dicaCor(c) {
@@ -376,6 +416,7 @@ function atualizarTotalFeira() {
     : t("feira.resumo", { c: `<b>${money(custo)}</b>`, s: `<b>${money(sobra)}</b>` });
   const btn = document.querySelector("button.principal");
   if (btn) btn.disabled = sobra < 0;
+  atualizarSidebarDia();
 }
 
 function cartaoCozinha() {
@@ -427,6 +468,7 @@ function recarregarCozinha() {
     tb.append(tr);
   }
   montarPreco(saboresDoDia);
+  atualizarSidebarDia();
 }
 
 /** Texto do tooltip: o que precisa pra fazer 10 unidades. */
@@ -670,6 +712,7 @@ function desenharGelo(corpo) {
     b.onclick = () => { gelo = info.sugestao; desenharGelo(corpo); };
     corpo.append(b);
   }
+  atualizarSidebarDia();
 }
 
 // ------------------------------------------------------------------ o dia
@@ -687,23 +730,49 @@ function telaRelatorio(r, desbloqueou) {
   app.innerHTML = "";
   app.append(cabecalho());
 
-  const c = el("div", "cartao");
-  c.append(el("h2", null, `${t("rel.titulo")} — ${t("ui.dia")} ${r.dia}`));
+  // --- hero: titulo do resultado + cena de fechamento
+  const local = catalogo.locais.find((l) => l.key === estado.local_atual);
+  const hero = el("div", "rel-hero");
+  const heroTexto = el("div", "texto");
+  heroTexto.innerHTML =
+    `<div class="eyebrow">${t("ui.dia")} ${r.dia} · ${t("local." + estado.local_atual)} · ${Math.round(r.clima.temp_c)}°C</div>
+     <h2>${ICONE[r.clima.kind] ?? "☀️"} ${t("clima." + r.clima.kind)}</h2>`;
+  const hClima = el("p");
+  hClima.innerHTML = t("rel.titulo");
+  heroTexto.append(hClima);
+  const heroCena = el("div", "cena-svg");
+  heroCena.innerHTML = CENA_RELATORIO;
+  hero.append(heroTexto, heroCena);
+  app.append(hero);
 
-  const cl = el("div", "clima");
-  cl.innerHTML = `<div class="icone">${ICONE[r.clima.kind] ?? "☀️"}</div>
-    <div><div class="temp">${Math.round(r.clima.temp_c)}°C</div>
-    <div class="desc">${t("clima." + r.clima.kind)}</div></div>`;
-  c.append(cl);
+  // --- tiles de resumo
+  const tiles = el("div", "tiles");
+  const tile = (rot, val, cls) => {
+    const d = el("div", "tile");
+    d.append(el("span", null, rot), el("b", cls, val));
+    tiles.append(d);
+  };
+  tile(t("rel.receita"), money(r.receita));
+  tile(t("rel.custos"), money(r.custo_insumos + r.custo_fixo));
+  tile(t("rel.lucro"), money(r.lucro), r.lucro >= 0 ? "lucro" : "prejuizo");
+  tile(t("ui.caixa"), money(r.caixa_final));
+  app.append(tiles);
+
+  const layout = el("div", "rel-layout");
+  const coluna = el("div", "rel-coluna cartao");
+  layout.append(coluna);
+
+  coluna.append(el("h2", null, `${t("rel.titulo")} — ${t("ui.dia")} ${r.dia}`));
 
   if (r.eventos?.length) {
     const ev = el("div", "eventos");
     for (const e of r.eventos) {
       ev.append(el("div", "evento", t(e.text_key, e.params)));
     }
-    c.append(ev);
+    coluna.append(ev);
   }
 
+  const c = coluna;
   const tab = el("table", "tab-rel");
   tab.innerHTML = `<thead><tr><th>${t("rel.sabor")}</th>
     <th class="num">${t("rel.levou")}</th>
@@ -744,19 +813,6 @@ function telaRelatorio(r, desbloqueou) {
       estado.local_atual === "casa" ? t("rel.nada_casa") : t("rel.nada_rua")));
   }
 
-  const tiles = el("div", "tiles");
-  const tile = (rot, val, cls) => {
-    const d = el("div", "tile");
-    d.append(el("span", null, rot), el("b", cls, val));
-    tiles.append(d);
-  };
-  tile(t("rel.receita"), money(r.receita));
-  tile(t("rel.custos"), money(r.custo_insumos + r.custo_fixo));
-  tile(t("rel.lucro"), money(r.lucro), r.lucro >= 0 ? "lucro" : "prejuizo");
-  tile(t("ui.caixa"), money(r.caixa_final));
-  c.append(tiles);
-
-  const local = catalogo.locais.find((l) => l.key === estado.local_atual);
   const pct = Math.min(100, Math.round(100 * estado.caixa / local.meta));
   c.append(el("p", "sub",
     `${t("ui.meta")}: ${money(estado.caixa)} / ${money(local.meta)}`));
@@ -764,7 +820,11 @@ function telaRelatorio(r, desbloqueou) {
   bm.innerHTML = `<i style="width:${pct}%"></i>`;
   c.append(bm);
 
+  // --- sidebar: falas da freguesia + acao de seguir pro proximo dia
+  const sidebar = el("div", "rel-sidebar");
   if (r.barks?.length) {
+    const falasCard = el("div", "cartao");
+    falasCard.append(el("div", "eyebrow", t("rel.na_fila")));
     const f = el("div", "falas");
     r.barks.slice(0, 5).forEach((b, i) => {
       const tag = Array.isArray(b) ? b[0] : b;
@@ -773,18 +833,17 @@ function telaRelatorio(r, desbloqueou) {
       d.style.animationDelay = i * 90 + "ms";
       f.append(d);
     });
-    c.append(f);
+    falasCard.append(f);
+    sidebar.append(falasCard);
   }
-  app.append(c);
 
-  const acoes = el("div", "linha-acoes");
   if (desbloqueou) {
     const nome = t(`local.${desbloqueou}`);
     const info = catalogo.locais.find((l) => l.key === desbloqueou);
     const av = el("div", "aviso");
     av.innerHTML = `<b>${t("cap.desbloqueou")}</b> ${nome} —
       ${t("cap.det", { v: money(info.entrada), n: info.trafego })}`;
-    app.append(av);
+    sidebar.append(av);
     const b = el("button", "principal", t("cap.mudar", { nome }));
     b.onclick = () => {
       const o = eng.mudarDePonto(estado, desbloqueou);
@@ -795,7 +854,7 @@ function telaRelatorio(r, desbloqueou) {
       }
       telaDia();
     };
-    acoes.append(b);
+    sidebar.append(b);
   }
   const seg = el("button", desbloqueou ? "secundaria" : "principal",
                  `${t("ui.proximo_dia")} →`);
@@ -803,8 +862,10 @@ function telaRelatorio(r, desbloqueou) {
     if (estado.encerrado) telaFim();
     else telaDia();
   };
-  acoes.append(seg);
-  app.append(acoes);
+  sidebar.append(seg);
+
+  layout.append(sidebar);
+  app.append(layout);
 }
 
 // Fallback neutro caso o catalogo nao tenha a fala regional.

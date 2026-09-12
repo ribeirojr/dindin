@@ -220,7 +220,15 @@ BASE_EN: dict[str, str] = {
     "gelo.nada": "Nothing to keep cold yet.",
     "gelo.atalho": "Take {n} and lose nothing",
 
+    # --- web: barra lateral do dia ---
+    "dia.resumo_titulo": "The day so far",
+    "dia.resumo_feira": "Market purchase",
+    "dia.resumo_gelo": "Ice",
+    "dia.resumo_vai": "Going in the cooler",
+    "dia.resumo_sobra": "Cash left",
+
     # --- web: relatorio e fim ---
+    "rel.na_fila": "In line",
     "rel.queria_curto": "Wanted",
     "rel.derreteu_aviso": "{n} unit(s) melted. More ice "
                           "(or a better cooler) protects your stock.",

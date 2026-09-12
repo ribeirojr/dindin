@@ -37,13 +37,16 @@ eng.tempos = { interpretador: 900, modulos: 7, importacao: 40, total: 950 };
 const erros = [];
 window.addEventListener("error", (e) => erros.push(e.message));
 
+const svgArt = await import(new URL("../../web/svg-art.js", import.meta.url).href);
 let src = readFileSync("web/app.js", "utf8")
   .replace('import { DindinEngine } from "./pyodide-bridge.js";', "")
+  .replace('import { CENA_HERO, CENA_RELATORIO, cenaLocal, cenaRegiao } from "./svg-art.js";', "")
   .replace("const eng = new DindinEngine();", "")
   .replace(/\nboot\(\);\s*$/,
     "\nglobalThis.__api = { telaRegioes, telaDia, comecar, setEstado: (e)=>{estado=e;}, getEstado: ()=>estado, getGelo: ()=>gelo };\n");
-const mod = new Function("eng", "__t", src.replace("tempos = null", "tempos = __t") + "\nreturn globalThis.__api;");
-const api = mod(eng, eng.tempos);
+const mod = new Function("eng", "__t", "CENA_HERO", "CENA_RELATORIO", "cenaLocal", "cenaRegiao",
+  src.replace("tempos = null", "tempos = __t") + "\nreturn globalThis.__api;");
+const api = mod(eng, eng.tempos, svgArt.CENA_HERO, svgArt.CENA_RELATORIO, svgArt.cenaLocal, svgArt.cenaRegiao);
 
 const $ = (s) => window.document.querySelector(s);
 const $$ = (s) => [...window.document.querySelectorAll(s)];
