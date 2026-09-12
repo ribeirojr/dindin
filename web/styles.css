@@ -151,7 +151,13 @@ header .marca {
 }
 .regiao:hover { border-color: var(--color-accent); transform: translateY(-2px); }
 .regiao.ativa { border-color: var(--color-accent); }
-.regiao .cena-svg { height: 100px; background: #1d2130; }
+.regiao .cena-svg { 
+  height: 100px; 
+  width: 100%; 
+  max-width: 320px; 
+  background: #1d2130; 
+  overflow: hidden; 
+}
 .regiao .corpo { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
 .regiao .produto {
   font-family: var(--font-heading); font-size: 21px; font-weight: 800;

@@ -29,7 +29,7 @@ BASE_EN: dict[str, str] = {
     "ui.confirmar": "Confirm",
     "ui.bora": "Let's go!",
     "ui.proximo_dia": "Next day",
-    "ui.escolha_regiao": "Where are you from?",
+    "ui.escolha_regiao": "Pick a city to play at!",
     "ui.dia": "Day",
     "ui.caixa": "Cash",
     "ui.reputacao": "Reputation",

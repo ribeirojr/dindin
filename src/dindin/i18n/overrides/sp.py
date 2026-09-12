@@ -10,7 +10,7 @@ OVERRIDE: dict[str, str] = {
     "vocativo": "mano",
     "gente": "a galera",
     "ui.subtitulo": "a vida de quem vende geladinho em São Paulo",
-    "ui.escolha_regiao": "Cê é de onde, meu?",
+    "ui.escolha_regiao": "Escolhe a cidade aí, parça?",
     "ui.bora": "Bora, mano!",
     "cozinha.subtitulo": "Quantos geladinhos cê vai fazer hoje?",
     "preco.subtitulo": "Por quanto cê vai vender, meu?",

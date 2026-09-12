@@ -156,6 +156,7 @@ BASE: dict[str, str] = {
     "regiao.subtitulo": "O doce muda de nome em cada estado — e o clima, "
                         "o gosto e o preço mudam junto.",
     "regiao.sai_muito": "Sai muito",
+    "ui.escolha_regiao": "Escolha uma cidade para jogar!",
     "ui.fama": "Fama",
     "ui.no_caixa": "No caixa",
     "ui.meta_curta": "Meta",
