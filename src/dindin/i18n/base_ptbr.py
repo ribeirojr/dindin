@@ -269,7 +269,7 @@ BASE: dict[str, str] = {
     # --- jornada / backup (salva a viagem do isopor) ---
     "jornada.salvar": "Bora salvar essa jornada arretada, ma broca? Isopor cheio de dindin bom, égua!",
     "jornada.baixar": "Baixar o save do dia",
-    "jornada.carregar": "Carregar jornada salva",
+    "jornada.carregar": "Carregar jornada",
     "jornada.instrucao": "Arraste o dindin-diaXX-ABCDEF.json aqui (ou clique). Salva no fim de cada dia após vender — continua de onde parou sem derreter o lucro.",
     "jornada.toast_salvo": "Jornada guardada! O isopor tá seguro na memória, vixe.",
     "jornada.toast_carregado": "Jornada restaurada. Bora pro próximo dia, meu consagrado!",
