@@ -678,5 +678,52 @@ input[type=range] { min-width: 140px; }
   .regiao .cena-svg { height: 80px; }
   .hero { padding: 4px 0 20px; gap: 16px; }
   .hero-cena { height: 150px; }
-  .bench { display: none; }  /* curiosidade de dev, nao cabe no bolso */
+  .bench { display: none; }
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  color: white;
+  font-weight: 500;
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 280px;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(-8px);
+}
+.toast.sucesso {
+  background: #009c3b;
+}
+.toast.erro {
+  background: #c00;
+}
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.drop-box {
+  border: 4px dashed #fff;
+  padding: 40px 60px;
+  border-radius: 16px;
+  color: white;
+  text-align: center;
+  font-size: 1.1rem;
+  background: rgba(0,0,0,0.5);
+}
+.backup-btn {
+  padding: 6px 12px;
+  font-size: 0.9rem;
 }

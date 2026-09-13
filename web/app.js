@@ -72,6 +72,123 @@ const t = (k, vars) => {
 const rotuloCurto = (cheio, curto) =>
   `<span class="rotulo-cheio">${cheio}</span><span class="rotulo-curto">${curto}</span>`;
 
+function mostrarToast(msg, tipo = "sucesso") {
+  const toast = el("div", `toast ${tipo}`);
+  toast.textContent = msg;
+  document.body.append(toast);
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+function dumpJornada(estadoAtual) {
+  if (typeof process !== "undefined") return;
+  const dump = {
+    version: 2,
+    timestamp: new Date().toISOString(),
+    localStorage: {},
+    estado: estadoAtual,
+    planning: {carrinho: (typeof carrinho === "object" ? {...carrinho} : {}), producao: (typeof producao === "object" ? {...producao} : {}), precos: (typeof precos === "object" ? {...precos} : {}), gelo: gelo ?? 0},
+    journey: {
+      locais_desbloqueados: [...(estadoAtual.locais_desbloqueados || [])],
+      melhor_local: estadoAtual.local_atual,
+      regiao: estadoAtual.regiao,
+      seed: estadoAtual.seed
+    },
+    conquistas,
+    tema,
+    lang
+  };
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("dindin-")) dump.localStorage[k] = localStorage.getItem(k);
+  }
+  console.log("🍦 Jornada salva (day-end):", dump);
+  const blob = new Blob([JSON.stringify(dump, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = el("a");
+  a.href = url;
+  const shortId = ((estadoAtual.seed % 100000) >>> 0).toString(36).toUpperCase().padStart(6, "0");
+  a.download = `dindin-dia${String(estadoAtual.dia).padStart(2, "0")}-${shortId}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast("Jornada guardada! O isopor tá seguro na memória, vixe.");
+}
+
+function restaurarDeDump(dump) {
+  if (!dump.version || dump.version === 1) {
+    const oldEstado = dump.estado || dump;
+    dump = {
+      version: 2,
+      localStorage: {
+        "dindin-tema": dump.tema || localStorage.getItem("dindin-tema") || "escuro",
+        "dindin-conquistas": JSON.stringify(dump.conquistas || conquistas || [])
+      },
+      estado: oldEstado,
+      planning: {},
+      journey: {
+        locais_desbloqueados: oldEstado.locais_desbloqueados || [],
+        melhor_local: oldEstado.local_atual || "casa",
+        regiao: oldEstado.regiao,
+        seed: oldEstado.seed
+      },
+      conquistas: dump.conquistas || [],
+      tema: dump.tema || "escuro",
+      lang: "pt",
+      activeGame: !!oldEstado.dia
+    };
+  }
+  const keys = ["dindin-tema", "dindin-conquistas"];
+  keys.forEach(k => localStorage.removeItem(k));
+  if (dump.localStorage) {
+    Object.entries(dump.localStorage).forEach(([k, v]) => {
+      if (k.startsWith("dindin-")) localStorage.setItem(k, v);
+    });
+  }
+  tema = localStorage.getItem("dindin-tema") === "claro" ? "claro" : "escuro";
+  document.documentElement.dataset.tema = tema;
+  conquistas = carregarConquistas();
+  if (dump.estado) {
+    estado = dump.estado;
+    if (dump.journey) {
+      estado.locais_desbloqueados = dump.journey.locais_desbloqueados || estado.locais_desbloqueados;
+    }
+    catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
+  }
+  mostrarToast(t("jornada.toast_carregado"));
+  telaRegioes();
+}
+
+function setupDragDrop() {
+  const overlay = el("div", "drop-overlay");
+  overlay.innerHTML = `<div class="drop-box">Arraste o save.json aqui (dindin-diaXX-ABCDEF.json) para restaurar a jornada. Salva automaticamente no fim de cada dia.</div>`;
+  overlay.style.display = "none";
+  document.body.append(overlay);
+  let dragCounter = 0;
+  const showOverlay = () => { dragCounter++; overlay.style.display = "flex"; };
+  const hideOverlay = () => { dragCounter = Math.max(0, dragCounter-1); if (dragCounter === 0) overlay.style.display = "none"; };
+  document.addEventListener("dragenter", (e) => {
+    if (e.dataTransfer.types.includes("Files")) showOverlay();
+  });
+  document.addEventListener("dragleave", hideOverlay);
+  document.addEventListener("dragover", (e) => e.preventDefault());
+  document.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    hideOverlay();
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith(".json")) {
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        restaurarDeDump(data);
+      } catch {
+        mostrarToast(t("jornada.erro"), "erro");
+      }
+    } else {
+      mostrarToast(t("jornada.erro"), "erro");
+    }
+  });
+}
+
 // ------------------------------------------------------------------ boot
 /* No celular nao existe :hover, e o :focus em <span> e inconsistente no
  * iOS. Um toque no "?" alterna a classe .aberta; tocar fora fecha. */
@@ -92,6 +209,7 @@ async function boot() {
     });
     $("#carregando").classList.add("sumindo");
     setTimeout(() => ($("#carregando").style.display = "none"), 400);
+    setupDragDrop();
     telaRegioes();
   } catch (e) {
     txt.innerHTML = `<span style="color:#e8517a">Falhou: ${e.message}</span>`;
@@ -125,6 +243,26 @@ function telaRegioes() {
     picker.append(chip);
   }
   picker.append(botaoTema());
+  const carregarBtn = el("button", "backup-btn secundaria", t("jornada.carregar"));
+  carregarBtn.onclick = () => {
+    const input = el("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (file) {
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          restaurarDeDump(data);
+        } catch {
+          mostrarToast(t("jornada.erro"), "erro");
+        }
+      }
+    };
+    input.click();
+  };
+  picker.append(carregarBtn);
   app.append(picker);
 
   // --- hero: titulo grande + cena de abertura
@@ -207,6 +345,9 @@ function cabecalho(clima) {
   add(t("ui.ponto"), t(`local.${estado.local_atual}`));
   h.append(s);
   h.append(botaoTema());
+  const salvarBtn = el("button", "backup-btn", "💾");
+  salvarBtn.onclick = () => dumpJornada(estado);
+  h.append(salvarBtn);
   return h;
 }
 

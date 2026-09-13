@@ -446,6 +446,12 @@ def mudar_de_ponto(estado: dict, local: str) -> dict:
     return {"ok": ok, "estado": estado_para_json(state)}
 
 
+def restaurar_estado(d: dict) -> dict:
+    state = estado_de_json(d)
+    state.local_atual = progression.melhor_local(state)
+    return estado_para_json(state)
+
+
 def formatar_dinheiro(centavos: int) -> str:
     return money(centavos)
 

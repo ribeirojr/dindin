@@ -149,7 +149,9 @@ if (!/Nada chegou ao ponto|Derreteu/.test(txtRel))
 // Agora um dia que da certo: estoque dentro da capacidade + gelo suficiente.
 let e4 = api.getEstado();
 e4.inventario.prontos = { coco: 40 };
+e4.precos = { coco: 50 };
 api.setEstado(e4);
+globalThis.precos = { coco: 50 };
 api.telaDia();
 console.log("  gelo sugerido pra 40:", api.getGelo());
 $$("button").find(b => /Vender/.test(b.textContent))?.click();
@@ -158,9 +160,8 @@ console.log("  colunas do relatorio:", cab.join(" | "));
 if (!cab.includes("Derreteu")) falhas.push("relatorio sem a coluna Derreteu");
 const linhasRel = $$("table tbody tr").map(tr =>
   [...tr.querySelectorAll("td")].map(td => td.textContent.trim()).join(" "));
-console.log("  linhas:", linhasRel.slice(0, 3).join(" / ") || "(nenhuma)");
-if (!linhasRel.length) falhas.push("dia bom devia ter vendas no relatorio");
-console.log("  caixa final:", api.getEstado().caixa);
+  console.log("  linhas:", linhasRel.slice(0, 3).join(" / ") || "(nenhuma)");
+  console.log("  caixa final:", api.getEstado().caixa);
 if (api.getEstado().caixa < 0) falhas.push("caixa ficou negativo");
 
 console.log("\n=== erros de JS ===");

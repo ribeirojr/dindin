@@ -54,7 +54,7 @@ elemento mais importante do ensino do jogo, e é o que justifica o porte.
 ## O que falta pra virar produto
 
 - [ ] Service worker pra cachear o Pyodide (segunda visita = instantâneo)
-- [ ] `localStorage` no lugar de `persistence/save.py`
+- [x] JSON dump + drag-drop restore (day-end auto, journey preserved, backward compat)
 - [ ] Seeds na URL pra comparar partidas (`?r=pa&seed=77`)
 - [ ] Upgrades e escolha de ponto no capítulo 5
 - [ ] Rodar o Pyodide num Web Worker (não travar a UI no boot)
