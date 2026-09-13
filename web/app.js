@@ -435,7 +435,8 @@ function continuarJornada(regiao) {
  * jogo, mas num namespace isolado (eng.rodarRepl) -- nao mexe no estado da
  * partida nem precisa dele. Existe pra dar ao curioso um lugar pra digitar
  * "2 + 2" e ver Python de verdade rodando no navegador, sem instalar nada. */
-const REPL_EXEMPLOS = ["2 + 2", 'nome = "Ana"', "print(nome)", "for i in range(3):\n    print(i)"];
+const REPL_EXEMPLOS = ["2 + 2", 'nome = "Ana"', "print(nome)",
+  "for i in range(3):\n    print(i)", "import this"];
 let replHistorico = [];   // linhas ja rodadas, mais recente por ultimo
 let replIndiceHist = null; // posicao ao navegar com as setas; null = fora do historico
 let replRascunho = "";     // o que o aluno estava digitando antes de apertar seta
@@ -500,6 +501,7 @@ function telaRepl() {
     replEcoar(codigo, saida, erro);
     campo.value = "";
     ajustarAlturaRepl(campo);
+    rolarAteCampoRepl();
   };
 
   campo.addEventListener("keydown", (e) => {
@@ -561,8 +563,17 @@ function replLinha(tela, cls, html) {
   const d = el("div", `repl-msg ${cls}`);
   d.innerHTML = html;
   tela.append(d);
-  tela.scrollTop = tela.scrollHeight;
+  rolarAteCampoRepl();
   return d;
+}
+
+/** A tela cresce com a pagina (sem scroll proprio) -- entao quem "rola" e a
+ * pagina, ate o campo de digitar ficar visivel. E ele que importa: e onde
+ * o proximo comando vai ser digitado, nao o topo da saida que acabou de
+ * imprimir (isso deixaria o campo fora da tela com uma saida longa, tipo
+ * o Zen do Python de "import this"). */
+function rolarAteCampoRepl() {
+  $("#repl-input")?.scrollIntoView({ block: "end", behavior: "smooth" });
 }
 
 /** Registra um comando + sua saida na tela, tipo scrollback de terminal. */
@@ -586,7 +597,7 @@ function replEcoar(codigo, saida, erro) {
     bloco.append(out);
   }
   tela.append(bloco);
-  tela.scrollTop = tela.scrollHeight;
+  rolarAteCampoRepl();
 }
 
 function escaparHtml(s) {

@@ -775,10 +775,13 @@ input[type=range] { min-width: 140px; }
 
 .repl-cartao { max-width: 760px; margin: 0 auto; }
 
+/* Cresce com o conteudo -- sem altura maxima nem scroll proprio. A pagina
+ * inteira rola, e o campo de digitar (logo abaixo) acompanha via
+ * scrollIntoView apos cada comando, como um terminal de verdade que faz
+ * parte da pagina em vez de uma janelinha presa. */
 .repl-tela {
   background: var(--color-bg); border: 1px solid var(--color-divider);
   border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 12px;
-  max-height: 420px; overflow-y: auto;
   font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px;
   line-height: 1.55;
 }
@@ -827,7 +830,7 @@ input[type=range] { min-width: 140px; }
 .repl-exemplo:hover { border-color: var(--color-accent); color: var(--color-accent-300); }
 
 @media (max-width: 560px) {
-  .repl-tela { max-height: 320px; font-size: 13px; }
+  .repl-tela { font-size: 13px; }
   .repl-linha { flex-wrap: wrap; }
   .repl-linha button.principal { width: 100%; }
 }
