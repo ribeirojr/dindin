@@ -34,6 +34,20 @@ BASE: dict[str, str] = {
     "ui.ponto": "Ponto de venda",
     "ui.clima_amanha": "Previsão de hoje",
 
+    # --- repl de python ---
+    "repl.menu_link": "🐍 Aprenda Python",
+    "repl.titulo": "Python no navegador",
+    "repl.subtitulo": "Digite um comando Python e aperte Enter para rodar. "
+                       "É o mesmo Python que roda o jogo — de verdade, sem servidor.",
+    "repl.placeholder": "digite aqui e aperte Enter...",
+    "repl.rodar": "Rodar",
+    "repl.limpar": "Limpar",
+    "repl.reiniciar": "Reiniciar",
+    "repl.reiniciado": "Python reiniciado. Todas as variáveis foram apagadas.",
+    "repl.bem_vindo": "Python {versao} pronto. Digite algo como {exemplo} e aperte Enter.",
+    "repl.dica_setas": "Dica: use ↑ e ↓ para repetir comandos anteriores.",
+    "repl.exemplos_titulo": "Exemplos pra começar",
+
     # --- feira ---
     "feira.titulo": "Feira",
     "feira.subtitulo": "Compre os insumos do dia",

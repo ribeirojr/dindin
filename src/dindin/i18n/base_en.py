@@ -37,6 +37,20 @@ BASE_EN: dict[str, str] = {
     "ui.reputacao": "Reputation",
     "ui.meta": "Chapter goal",
     "ui.ponto": "Selling spot",
+
+    # --- python repl ---
+    "repl.menu_link": "🐍 Learn Python",
+    "repl.titulo": "Python in the browser",
+    "repl.subtitulo": "Type a Python command and press Enter to run it. "
+                       "It's the same Python that runs the game — for real, no server.",
+    "repl.placeholder": "type here and press Enter...",
+    "repl.rodar": "Run",
+    "repl.limpar": "Clear",
+    "repl.reiniciar": "Restart",
+    "repl.reiniciado": "Python restarted. All variables were erased.",
+    "repl.bem_vindo": "Python {versao} ready. Try something like {exemplo} and press Enter.",
+    "repl.dica_setas": "Tip: use ↑ and ↓ to repeat previous commands.",
+    "repl.exemplos_titulo": "Examples to get started",
     "ui.clima_amanha": "Today's forecast",
 
     # --- feira ---

@@ -136,6 +136,60 @@ if "/jogo" not in sys.path:
   comprarIsopor(estado, key) { return this._call("comprar_isopor", estado, key); }
   infoDoGelo(estado, unidades) { return this._call("info_do_gelo", estado, unidades); }
 
+  /** Prepara um namespace Python isolado pro REPL de aprendizado -- nao
+   * compartilha nada com dindin.bridge, entao o aluno nao consegue nem
+   * atrapalhar o jogo nem "trapacear" mexendo no estado por dentro. */
+  _replNamespace() {
+    if (!this._replNs) {
+      this._replNs = this.pyodide.runPython(
+        "import code as _code, sys\n" +
+        "_repl_ns = {'__name__': '__console__', '__doc__': None}\n" +
+        "_repl_ns"
+      );
+    }
+    return this._replNs;
+  }
+
+  /** Roda uma linha (ou bloco) de codigo como um REPL de verdade: se a
+   * ultima linha for uma expressao, mostra o repr() dela (igual o >>> do
+   * terminal). Devolve { saida, erro }. */
+  rodarRepl(codigoFonte) {
+    this._replNamespace();
+    this.pyodide.globals.set("_repl_fonte", codigoFonte);
+    const resultado = this.pyodide.runPython(`
+import contextlib, io, traceback
+
+_saida_buf = io.StringIO()
+_erro = None
+try:
+    try:
+        _compilado = compile(_repl_fonte, "<repl>", "single")
+    except SyntaxError:
+        _compilado = compile(_repl_fonte, "<repl>", "exec")
+    with contextlib.redirect_stdout(_saida_buf), contextlib.redirect_stderr(_saida_buf):
+        exec(_compilado, _repl_ns)
+except SystemExit:
+    _erro = None
+except BaseException:
+    _erro = "".join(traceback.format_exception_only(*sys.exc_info()[:2])).strip()
+
+(_saida_buf.getvalue(), _erro)
+`);
+    const [saida, erro] = resultado.toJs();
+    resultado.destroy();
+    return { saida, erro };
+  }
+
+  /** Zera o namespace do REPL (comando "reiniciar"). */
+  reiniciarRepl() {
+    this._replNs = null;
+    this._replNamespace();
+  }
+
+  versaoPython() {
+    return this.pyodide.runPython("import sys; '.'.join(map(str, sys.version_info[:3]))");
+  }
+
   /** Mede quanto custa simular N dias -- pra provar que velocidade nao e o gargalo. */
   benchmark(n = 200) {
     const estado = this.novoJogo("pa", 1);

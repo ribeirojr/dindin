@@ -127,6 +127,10 @@ function telaRegioes() {
   picker.append(botaoTema());
   app.append(picker);
 
+  const replLink = el("button", "repl-link", t("repl.menu_link"));
+  replLink.onclick = telaRepl;
+  app.append(replLink);
+
   // --- hero: titulo grande + cena de abertura
   const hero = el("div", "hero");
   const heroTexto = el("div", "hero-texto");
@@ -184,6 +188,171 @@ function comecar(regiao) {
   history.replaceState({}, "",
     `?r=${regiao}&seed=${seed}${lang === "en" ? "&lang=en" : ""}`);
   telaDia();
+}
+
+// -------------------------------------------------------------------- repl
+/* Console de Python de aprendizado. Roda no MESMO interprete Pyodide do
+ * jogo, mas num namespace isolado (eng.rodarRepl) -- nao mexe no estado da
+ * partida nem precisa dele. Existe pra dar ao curioso um lugar pra digitar
+ * "2 + 2" e ver Python de verdade rodando no navegador, sem instalar nada. */
+const REPL_EXEMPLOS = ["2 + 2", 'nome = "Ana"', "print(nome)", "for i in range(3):\n    print(i)"];
+let replHistorico = [];   // linhas ja rodadas, mais recente por ultimo
+let replIndiceHist = null; // posicao ao navegar com as setas; null = fora do historico
+let replRascunho = "";     // o que o aluno estava digitando antes de apertar seta
+
+function telaRepl() {
+  redesenharTelaAtual = telaRepl;
+  const app = $("#app");
+  app.innerHTML = "";
+
+  const topo = el("div", "lang-picker");
+  const voltar = el("button", "lang-chip", `← ${t("ui.voltar")}`);
+  voltar.onclick = telaRegioes;
+  topo.append(voltar);
+  topo.append(botaoTema());
+  app.append(topo);
+
+  const c = el("div", "cartao repl-cartao");
+  c.append(el("h2", null, t("repl.titulo")));
+  c.append(el("p", "sub", t("repl.subtitulo")));
+
+  const tela = el("div", "repl-tela");
+  tela.id = "repl-tela";
+  c.append(tela);
+
+  const linha = el("div", "repl-linha");
+  const prompt = el("span", "repl-prompt", ">>>");
+  const campo = el("textarea", "repl-input");
+  campo.id = "repl-input";
+  campo.placeholder = t("repl.placeholder");
+  campo.rows = 1;
+  campo.spellcheck = false;
+  campo.autocapitalize = "off";
+  campo.autocomplete = "off";
+  const rodar = el("button", "principal", t("repl.rodar"));
+  linha.append(prompt, campo, rodar);
+  c.append(linha);
+
+  const acoes = el("div", "repl-acoes");
+  const limpar = el("button", "secundaria", t("repl.limpar"));
+  const reiniciar = el("button", "secundaria", t("repl.reiniciar"));
+  acoes.append(limpar, reiniciar);
+  c.append(acoes);
+
+  const ex = el("div", "repl-exemplos");
+  ex.append(el("span", "rotulo", t("repl.exemplos_titulo")));
+  for (const codigo of REPL_EXEMPLOS) {
+    const chip = el("button", "repl-exemplo", codigo.split("\n")[0]);
+    chip.onclick = () => { campo.value = codigo; ajustarAlturaRepl(campo); campo.focus(); };
+    ex.append(chip);
+  }
+  c.append(ex);
+
+  app.append(c);
+
+  const executar = () => {
+    const codigo = campo.value;
+    if (!codigo.trim()) return;
+    replHistorico.push(codigo);
+    replIndiceHist = null;
+    replRascunho = "";
+    const { saida, erro } = eng.rodarRepl(codigo);
+    replEcoar(codigo, saida, erro);
+    campo.value = "";
+    ajustarAlturaRepl(campo);
+  };
+
+  campo.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      executar();
+      return;
+    }
+    if (e.key === "ArrowUp" && !codigoTemQuebraDeLinha(campo)) {
+      if (!replHistorico.length) return;
+      e.preventDefault();
+      if (replIndiceHist === null) { replRascunho = campo.value; replIndiceHist = replHistorico.length; }
+      replIndiceHist = Math.max(0, replIndiceHist - 1);
+      campo.value = replHistorico[replIndiceHist];
+      ajustarAlturaRepl(campo);
+    } else if (e.key === "ArrowDown" && !codigoTemQuebraDeLinha(campo)) {
+      if (replIndiceHist === null) return;
+      e.preventDefault();
+      replIndiceHist += 1;
+      if (replIndiceHist >= replHistorico.length) {
+        replIndiceHist = null;
+        campo.value = replRascunho;
+      } else {
+        campo.value = replHistorico[replIndiceHist];
+      }
+      ajustarAlturaRepl(campo);
+    }
+  });
+  campo.addEventListener("input", () => ajustarAlturaRepl(campo));
+  rodar.onclick = executar;
+  limpar.onclick = () => { tela.innerHTML = ""; };
+  reiniciar.onclick = () => {
+    eng.reiniciarRepl();
+    tela.innerHTML = "";
+    replLinha(tela, "aviso", t("repl.reiniciado"));
+  };
+
+  const versao = eng.versaoPython();
+  replLinha(tela, "boas-vindas",
+    t("repl.bem_vindo", { versao, exemplo: `<code>${REPL_EXEMPLOS[0]}</code>` }));
+  const dica = el("div", "repl-dica");
+  dica.textContent = t("repl.dica_setas");
+  tela.append(dica);
+  campo.focus();
+}
+
+/** true se o textarea tem mais de uma linha -- af, aí as setas devem mover
+ * o cursor dentro do texto, nao navegar o historico. */
+function codigoTemQuebraDeLinha(campo) {
+  return campo.value.includes("\n");
+}
+
+function ajustarAlturaRepl(campo) {
+  campo.style.height = "auto";
+  campo.style.height = campo.scrollHeight + "px";
+}
+
+function replLinha(tela, cls, html) {
+  const d = el("div", `repl-msg ${cls}`);
+  d.innerHTML = html;
+  tela.append(d);
+  tela.scrollTop = tela.scrollHeight;
+  return d;
+}
+
+/** Registra um comando + sua saida na tela, tipo scrollback de terminal. */
+function replEcoar(codigo, saida, erro) {
+  const tela = $("#repl-tela");
+  if (!tela) return;
+  const bloco = el("div", "repl-bloco");
+  const linhas = codigo.split("\n");
+  bloco.innerHTML = linhas
+    .map((l, i) => `<div class="repl-echo"><span class="repl-prompt">${
+      i === 0 ? "&gt;&gt;&gt;" : "..."}</span><code>${escaparHtml(l)}</code></div>`)
+    .join("");
+  if (saida) {
+    const out = el("pre", "repl-saida");
+    out.textContent = saida.replace(/\n$/, "");
+    bloco.append(out);
+  }
+  if (erro) {
+    const out = el("pre", "repl-erro");
+    out.textContent = erro;
+    bloco.append(out);
+  }
+  tela.append(bloco);
+  tela.scrollTop = tela.scrollHeight;
+}
+
+function escaparHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 function cabecalho(clima) {
