@@ -160,9 +160,14 @@ function restaurarDeDump(dump) {
       return;
     }
     catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
+    history.replaceState({}, "",
+      `?r=${estado.regiao}&seed=${estado.seed}${lang === "en" ? "&lang=en" : ""}`);
   }
   mostrarToast(t("jornada.toast_carregado"));
-  telaRegioes();
+  // Um dump sempre traz um jogo em andamento: volta pra tela de regioes
+  // deixava o restore "invisivel" (o menu nao le `estado`, entao parecia
+  // que nada tinha acontecido). O jogador espera continuar de onde parou.
+  if (dump.estado) telaDia(); else telaRegioes();
 }
 
 function setupDragDrop() {
