@@ -34,7 +34,8 @@ class SimulationScreen(Screen[None]):
 
     def on_mount(self) -> None:
         self.query_one(SceneCard).mostrar(
-            self.resultado.local, self.resultado.clima, "venda")
+            self.resultado.local, self.resultado.clima, "venda",
+            self.state.regiao)
         self._rng = stream(self.state.seed, self.resultado.dia, "playback")
         self._timer = self.set_interval(0.09, self._tick)
 

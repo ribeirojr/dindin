@@ -302,5 +302,11 @@ OVERRIDES_EN: dict[str, dict[str, str]] = {
     "sp": {"produto.sing": "geladinho", "produto.plur": "geladinhos"},
     "rs": {"produto.sing": "gelinho", "produto.plur": "gelinhos"},
     "pa": {"produto.sing": "chup-chup", "produto.plur": "chup-chups"},
-    "df": {"produto.sing": "geladim", "produto.plur": "geladins"},
+    "df": {
+        "produto.sing": "geladim", "produto.plur": "geladins",
+        # DF has no beach -- chapter 3 becomes the Esplanada dos Ministérios.
+        "local.praia": "Esplanada dos Ministérios",
+        "dica.praia": "Well-paid crowd, early lunch break. But weekends the "
+                      "Esplanada empties out — barely a civil servant in sight.",
+    },
 }

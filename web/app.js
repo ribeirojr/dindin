@@ -249,7 +249,7 @@ function telaDia() {
   pl.append(el("p", "sub", t("ui.antes")));
   const plGrid = el("div", "plano-grid");
   const cena = el("div", "cena-svg cena");
-  cena.innerHTML = cenaLocal(estado.local_atual, tema);
+  cena.innerHTML = cenaLocal(estado.local_atual, tema, estado.regiao);
   const local0 = catalogo.locais.find((l) => l.key === estado.local_atual);
   const falta = Math.max(0, local0.meta - estado.caixa);
   const resumo = el("div", "plano-resumo");

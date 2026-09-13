@@ -110,6 +110,31 @@ CENAS: dict[str, dict[str, str]] = {
     },
 }
 
+# Excecoes por regiao: mesmo capitulo, outro lugar. DF nao tem praia --
+# o capitulo 3 la e a Esplanada dos Ministerios (ver local.praia no i18n).
+CENAS_REGIAO: dict[str, dict[str, dict[str, str]]] = {
+    "df": {
+        "praia": {
+            "plano": r"""
+    ▄▄▄▄▄  ▄▄▄▄▄  ▄▄▄▄▄  ▄▄▄▄▄
+    █ ▓ █  █ ▓ █  █ ▓ █  █ ▓ █    ___________
+    █ ▓ █  █ ▓ █  █ ▓ █  █ ▓ █   /  ISOPOR  /|
+    ▔▔▔▔▔  ▔▔▔▔▔  ▔▔▔▔▔  ▔▔▔▔▔  /__________/ |
+   ─────────────────────────────|░░░░░░░░░| /
+         esplanada               |_________|/
+""",
+            "venda": r"""
+    ▄▄▄▄▄  ▄▄▄▄▄  ▄▄▄▄▄  ▄▄▄▄▄
+    █ ▓ █  █ ▓ █  █ ▓ █  █ ▓ █  o/  ___________
+    █ ▓ █  █ ▓ █  █ ▓ █  █ ▓ █  /| /  ISOPOR  /|
+    ▔▔▔▔▔  ▔▔▔▔▔  ▔▔▔▔▔  ▔▔▔▔▔  / \/__________/ |
+   ───────────────────────────────|▓▓▓▓▓▓▓▓▓| /  "um geladim!"
+                                   |_________|/
+""",
+        },
+    },
+}
+
 _CEU: dict[WeatherKind, tuple[str, str]] = {
     WeatherKind.ESCALDANTE: (r"    \ | /      ", "bright_yellow"),
     WeatherKind.QUENTE: (r"     \|/       ", "yellow"),
@@ -124,14 +149,21 @@ _COR_PONTO = {
     "casa": "grey70", "isopor": "orange1", "praia": "yellow",
     "escola": "cyan", "carrinho": "magenta",
 }
+_COR_PONTO_REGIAO = {
+    "df": {"praia": "grey78"},   # concreto da Esplanada, nao sol de praia
+}
 
 
 class SceneCard(Static):
     """Desenho do ponto. modo='plano' antes de vender, 'venda' durante."""
 
-    def mostrar(self, local: str, clima=None, modo: str = "plano") -> None:
-        cena = CENAS.get(local, CENAS["casa"]).get(modo, "")
-        cor = _COR_PONTO.get(local, "white")
+    def mostrar(self, local: str, clima=None, modo: str = "plano",
+                regiao: str | None = None) -> None:
+        grupo_regiao = CENAS_REGIAO.get(regiao or "", {})
+        cenas_local = grupo_regiao.get(local) or CENAS.get(local) or CENAS["casa"]
+        cena = cenas_local.get(modo, "")
+        cor = _COR_PONTO_REGIAO.get(regiao or "", {}).get(local) \
+            or _COR_PONTO.get(local, "white")
 
         topo = ""
         if clima is not None:

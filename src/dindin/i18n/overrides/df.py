@@ -26,4 +26,8 @@ OVERRIDE: dict[str, str] = {
     "cap.vitoria": "Você conseguiu, bicho! Massa demais!",
     "evento.seca_do_cerrado": "Eita seca, bicho. Meses sem chuva e o ar seco de rachar.",
     "evento.greve_servidor": "Greve de servidor, bicho — cidade inteira na rua ao meio-dia.",
+    # DF nao tem praia -- o capitulo 3 vira a Esplanada dos Ministerios.
+    "local.praia": "Esplanada dos Ministérios",
+    "dica.praia": "Aqui o povo tem grana e sai pra almoçar cedo. Mas fim de semana "
+                  "a Esplanada esvazia — quase ninguém de servidor por perto.",
 }

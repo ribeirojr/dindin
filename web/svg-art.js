@@ -727,7 +727,70 @@ export const CENA_FILA = {
 </svg>`,
 };
 
-export function cenaLocal(key, tema) {
+// Excecoes por regiao: mesmo capitulo, outro lugar. DF nao tem praia --
+// o capitulo 3 la e a Esplanada dos Ministerios (ver local.praia no i18n).
+export const CENA_LOCAL_REGIAO = {
+  df: {
+    praia: {
+      escuro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A Esplanada: predios dos ministerios identicos, isopor na calcada">
+  <rect width="160" height="128" fill="#1b2233"></rect>
+  <circle cx="128" cy="26" r="17" fill="#e8c07a" opacity="0.85"></circle>
+  <rect y="70" width="160" height="18" fill="#181d2c"></rect>
+  <g fill="#2c3348">
+    <rect x="10" y="42" width="20" height="28"></rect>
+    <rect x="36" y="42" width="20" height="28"></rect>
+    <rect x="62" y="42" width="20" height="28"></rect>
+    <rect x="88" y="42" width="20" height="28"></rect>
+  </g>
+  <g fill="#3c4470" opacity="0.7">
+    <rect x="14" y="47" width="5" height="7"></rect>
+    <rect x="21" y="47" width="5" height="7"></rect>
+    <rect x="40" y="47" width="5" height="7"></rect>
+    <rect x="47" y="47" width="5" height="7"></rect>
+    <rect x="66" y="47" width="5" height="7"></rect>
+    <rect x="73" y="47" width="5" height="7"></rect>
+    <rect x="92" y="47" width="5" height="7"></rect>
+    <rect x="99" y="47" width="5" height="7"></rect>
+  </g>
+  <rect y="88" width="160" height="40" fill="#262a3b"></rect>
+  <rect x="118" y="60" width="34" height="28" rx="4" fill="#1f2433"></rect>
+  <rect x="115" y="54" width="40" height="7" rx="3" fill="#2d3246"></rect>
+  <ellipse cx="135" cy="118" rx="26" ry="5" fill="#191c28"></ellipse>
+</svg>`,
+      claro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A Esplanada sob ceu claro: predios dos ministerios, isopor na calcada">
+  <rect width="160" height="128" fill="#a9ddf3"></rect>
+  <circle cx="128" cy="24" r="15" fill="#ffdf00"></circle>
+  <rect y="70" width="160" height="18" fill="#e9e0c4"></rect>
+  <g fill="#ffffff">
+    <rect x="10" y="42" width="20" height="28"></rect>
+    <rect x="36" y="42" width="20" height="28"></rect>
+    <rect x="62" y="42" width="20" height="28"></rect>
+    <rect x="88" y="42" width="20" height="28"></rect>
+  </g>
+  <g fill="#8ec4e2">
+    <rect x="14" y="47" width="5" height="7"></rect>
+    <rect x="21" y="47" width="5" height="7"></rect>
+    <rect x="40" y="47" width="5" height="7"></rect>
+    <rect x="47" y="47" width="5" height="7"></rect>
+    <rect x="66" y="47" width="5" height="7"></rect>
+    <rect x="73" y="47" width="5" height="7"></rect>
+    <rect x="92" y="47" width="5" height="7"></rect>
+    <rect x="99" y="47" width="5" height="7"></rect>
+  </g>
+  <rect y="88" width="160" height="40" fill="#f0e3c0"></rect>
+  <rect x="118" y="60" width="34" height="28" rx="4" fill="#ffffff"></rect>
+  <rect x="115" y="54" width="40" height="7" rx="3" fill="#002776"></rect>
+  <ellipse cx="135" cy="118" rx="26" ry="5" fill="#d9c69c"></ellipse>
+</svg>`,
+    },
+  },
+};
+
+export function cenaLocal(key, tema, regiao) {
+  const excecao = CENA_LOCAL_REGIAO[regiao]?.[key]?.[tema];
+  if (excecao) return excecao;
   const grupo = CENA_LOCAL[tema] ?? CENA_LOCAL.escuro;
   return grupo[key] ?? grupo.isopor;
 }

@@ -14,15 +14,6 @@ from ...content.locations import LOCAIS
 from ...i18n import money
 from ..widgets import SceneCard, WeatherCard
 
-# Dica curta por capitulo: ensina o que muda naquele ponto.
-_DICAS = {
-    "casa": "Comece pequeno: faça poucos e veja quantos a vizinhança quer.",
-    "isopor": "Na rua o movimento é bem maior — mas chuva esvazia a calçada.",
-    "praia": "Praia paga mais caro e adora cremoso. Só que chuva aqui é fatal.",
-    "escola": "Criança tem pouco dinheiro: aqui o barato vende, o gourmet encalha.",
-    "carrinho": "Seu ponto, suas regras. Olhe a previsão e escolha o dia certo.",
-}
-
 
 class PlanScreen(Screen[None]):
     BINDINGS = [("enter", "seguir", "Começar"), ("escape", "seguir", "Começar")]
@@ -53,7 +44,7 @@ class PlanScreen(Screen[None]):
     def on_mount(self) -> None:
         local = LOCAIS[self.state.local_atual]
         self.query_one(SceneCard).mostrar(
-            self.state.local_atual, self.clima, "plano")
+            self.state.local_atual, self.clima, "plano", self.state.regiao)
         self.query_one(WeatherCard).mostrar(self.clima)
 
         sabores = sabores_disponiveis(self.state.locais_desbloqueados)
@@ -71,7 +62,7 @@ class PlanScreen(Screen[None]):
         self.query_one("#plano-resumo", Static).update("\n".join(linhas))
 
         self.query_one("#plano-dica", Static).update(
-            _DICAS.get(self.state.local_atual, ""))
+            self.tr.t(f"dica.{self.state.local_atual}"))
         self.query_one("#ok", Button).focus()
 
     def action_seguir(self) -> None:

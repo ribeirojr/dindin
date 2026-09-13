@@ -46,7 +46,9 @@ def test_interface_sai_em_ingles(regiao):
     en = Translator(regiao, "en")
     assert en.t("ui.novo_jogo") == "New game"
     assert en.t("feira.titulo") == "Market"
-    assert en.t("local.praia") == "Beach"
+    # DF nao tem praia: o capitulo 3 la e a Esplanada dos Ministerios.
+    esperado_praia = "Esplanada dos Ministérios" if regiao == "df" else "Beach"
+    assert en.t("local.praia") == esperado_praia
     assert not en.t("rel.sellout", perdidos=3).startswith("⟨missing:")
 
 
