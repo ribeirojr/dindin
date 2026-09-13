@@ -533,7 +533,6 @@ function cabecalho(clima) {
   s.append(dClima);
   add(t("ui.dia"), estado.dia);
   add(t("ui.caixa"), money(estado.caixa));
-  add(t("ui.fama"), Math.round(estado.reputacao));
   add(t("ui.ponto"), t(`local.${estado.local_atual}`));
   h.append(s);
   h.append(botaoTema());
@@ -1172,6 +1171,12 @@ function telaRelatorio(r, desbloqueou) {
   tile(t("rel.custos"), money(r.custo_insumos + r.custo_fixo));
   tile(t("rel.lucro"), money(r.lucro), r.lucro >= 0 ? "lucro" : "prejuizo");
   tile(t("ui.caixa"), money(r.caixa_final));
+  // Fama e efeito acumulado de varios dias, nao um numero pra vigiar a
+  // cada tela -- por isso mora aqui como o resultado do dia (a variacao),
+  // nao no cabecalho fixo junto de caixa/dia/ponto.
+  const deltaFama = Math.round(r.reputacao_delta ?? 0);
+  tile(t("ui.fama"), `${deltaFama > 0 ? "+" : ""}${deltaFama}`,
+       deltaFama > 0 ? "lucro" : deltaFama < 0 ? "prejuizo" : "");
   app.append(tiles);
 
   const layout = el("div", "rel-layout");
