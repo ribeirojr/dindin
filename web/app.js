@@ -111,7 +111,9 @@ function telaRegioes() {
 
   // O seletor de idioma + tema: controles fixos no topo da tela.
   const picker = el("div", "lang-picker");
-  const replLink = el("button", "lang-chip repl-link", t("repl.menu_link"));
+  const replLink = el("button", "lang-chip repl-link", "🐍");
+  replLink.title = t("repl.menu_link");
+  replLink.setAttribute("aria-label", t("repl.menu_link"));
   replLink.onclick = telaRepl;
   picker.append(replLink);
   for (const [codigo, bandeira, rotulo] of [["pt", "🇧🇷", "Português"], ["en", "🇺🇸", "English"]]) {

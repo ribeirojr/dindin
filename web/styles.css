@@ -682,10 +682,13 @@ input[type=range] { min-width: 140px; }
 }
 
 /* ---------- repl de python (tela de aprendizado) ---------- */
-/* Mesmo pill do seletor de idioma (.lang-chip), so com o texto em destaque
- * pra chamar atencao sem quebrar a fileira de controles do topo. */
-.repl-link { color: var(--color-accent-300); font-weight: 700; margin-right: auto; }
-.repl-link:hover { border-color: var(--color-accent); }
+/* So a cobrinha, sem rotulo: um easter egg discreto no canto do menu, nao
+ * um item de navegacao chamando atencao pra si. */
+.repl-link {
+  margin-right: auto; width: 32px; height: 32px; padding: 0;
+  border-radius: 50%; font-size: 16px; display: grid; place-items: center;
+}
+.repl-link:hover { border-color: var(--color-accent); transform: scale(1.1); }
 
 .repl-cartao { max-width: 760px; margin: 0 auto; }
 
