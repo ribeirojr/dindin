@@ -33,6 +33,8 @@ BASE: dict[str, str] = {
     "ui.meta": "Meta do capítulo",
     "ui.ponto": "Ponto de venda",
     "ui.clima_amanha": "Previsão de hoje",
+    "ui.menu": "Mais opções",
+    "ui.trocar_regiao": "Trocar de região",
 
     # --- repl de python ---
     "repl.menu_link": "🐍 Aprenda Python",

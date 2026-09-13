@@ -212,13 +212,24 @@ function setupDragDrop() {
 
 // ------------------------------------------------------------------ boot
 /* No celular nao existe :hover, e o :focus em <span> e inconsistente no
- * iOS. Um toque no "?" alterna a classe .aberta; tocar fora fecha. */
+ * iOS. Um toque no "?" (ou no "⋯" do cabecalho) alterna a classe .aberta;
+ * tocar fora fecha. Mesmo padrao pros dois -- so muda o seletor. */
 document.addEventListener("click", (e) => {
-  const alvo = e.target.closest?.(".ajuda");
+  const alvoAjuda = e.target.closest?.(".ajuda");
   for (const a of document.querySelectorAll(".ajuda.aberta")) {
-    if (a !== alvo) a.classList.remove("aberta");
+    if (a !== alvoAjuda) a.classList.remove("aberta");
   }
-  if (alvo) { e.preventDefault(); alvo.classList.toggle("aberta"); }
+  if (alvoAjuda) { e.preventDefault(); alvoAjuda.classList.toggle("aberta"); }
+
+  const alvoMenu = e.target.closest?.(".menu-cabecalho");
+  const cliqueNoToggle = e.target.closest?.(".menu-toggle");
+  for (const m of document.querySelectorAll(".menu-cabecalho.aberto")) {
+    if (m !== alvoMenu) m.classList.remove("aberto");
+  }
+  if (cliqueNoToggle) cliqueNoToggle.closest(".menu-cabecalho")?.classList.toggle("aberto");
+  else if (alvoMenu && e.target.closest(".menu-lista button")) {
+    alvoMenu.classList.remove("aberto");   // fecha ao escolher uma opcao
+  }
 });
 
 async function boot() {
@@ -535,13 +546,34 @@ function cabecalho(clima) {
   add(t("ui.caixa"), money(estado.caixa));
   add(t("ui.ponto"), t(`local.${estado.local_atual}`));
   h.append(s);
-  h.append(botaoTema());
-  const salvarBtn = el("button", "backup-btn", "💾");
-  salvarBtn.title = t("jornada.salvar");
-  salvarBtn.setAttribute("aria-label", t("jornada.salvar"));
-  salvarBtn.onclick = () => dumpJornada(estado);
-  h.append(salvarBtn);
+  h.append(menuCabecalho());
   return h;
+}
+
+/** Menu de "mais opcoes" do jogo: tema, salvar e trocar de regiao. Eram tres
+ * botoes soltos no cabecalho, cada um competindo com os stats por atencao;
+ * juntos aqui porque sao todos "acoes sobre a sessao", nao dados do dia. */
+function menuCabecalho() {
+  const wrap = el("div", "menu-cabecalho");
+  const toggle = el("button", "menu-toggle", "⋯");
+  toggle.title = t("ui.menu");
+  toggle.setAttribute("aria-label", t("ui.menu"));
+  wrap.append(toggle);
+
+  const lista = el("div", "menu-lista");
+  const item = (icone, texto, onclick, title) => {
+    const b = el("button", null, `${icone} ${texto}`);
+    if (title) b.title = title;
+    b.onclick = onclick;
+    lista.append(b);
+    return b;
+  };
+  item(tema === "claro" ? "🌙" : "🏳️", tema === "claro" ? t("ui.modo_noite") : t("ui.modo_bandeira"),
+       alternarTema);
+  item("💾", t("jornada.baixar"), () => dumpJornada(estado), t("jornada.salvar"));
+  item("←", t("ui.trocar_regiao"), telaRegioes);
+  wrap.append(lista);
+  return wrap;
 }
 
 /** Alterna entre o tema escuro (padrao) e o "modo bandeira" (claro). */

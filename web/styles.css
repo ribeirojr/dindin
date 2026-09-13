@@ -116,6 +116,33 @@ header .marca {
 .stat-clima .icone { font-size: 15px; line-height: 1; }
 .stat-clima span { color: var(--color-neutral-500); text-transform: none; letter-spacing: 0; }
 
+/* ---------- menu do cabecalho (tema, salvar, trocar de regiao) ---------- */
+/* Junta tres acoes que antes eram botoes soltos disputando espaco com os
+ * stats do dia. Mesmo padrao de toggle por clique do ".ajuda" (funciona
+ * igual em touch e mouse, sem depender de :hover). */
+.menu-cabecalho { position: relative; }
+.menu-toggle {
+  width: 34px; height: 34px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider); background: transparent;
+  color: var(--color-neutral-400); font-size: 18px; line-height: 1;
+  cursor: pointer; font-family: inherit;
+}
+.menu-toggle:hover { border-color: var(--color-accent); color: var(--color-text); }
+.menu-lista {
+  display: none; position: absolute; right: 0; top: calc(100% + 6px);
+  background: var(--color-surface); border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  padding: 6px; min-width: 190px; z-index: 40;
+}
+.menu-cabecalho.aberto .menu-lista { display: flex; flex-direction: column; gap: 2px; }
+.menu-lista button {
+  display: flex; align-items: center; gap: 8px; text-align: left;
+  padding: 9px 10px; border: none; border-radius: 8px; background: transparent;
+  color: var(--color-text); font-family: inherit; font-size: 13.5px;
+  cursor: pointer; white-space: nowrap;
+}
+.menu-lista button:hover { background: var(--color-surface-2); }
+
 /* ---------- cartoes ---------- */
 .cartao {
   background: var(--color-surface); border: 1px solid var(--color-divider);

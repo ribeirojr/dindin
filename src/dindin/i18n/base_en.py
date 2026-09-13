@@ -37,6 +37,8 @@ BASE_EN: dict[str, str] = {
     "ui.reputacao": "Reputation",
     "ui.meta": "Chapter goal",
     "ui.ponto": "Selling spot",
+    "ui.menu": "More options",
+    "ui.trocar_regiao": "Switch region",
 
     # --- python repl ---
     "repl.menu_link": "🐍 Learn Python",
