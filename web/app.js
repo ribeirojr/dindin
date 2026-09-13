@@ -46,6 +46,48 @@ function salvarConquistas(lista) {
     localStorage.setItem("dindin-conquistas", JSON.stringify(lista));
   } catch { /* modo privado/sem quota: joga sem guardar */ }
 }
+
+// Progresso por regiao: { [regiao]: { dia, caixa, estado } }. Antes so a
+// vitoria ficava registrada (o "estado" morria ao trocar de regiao) -- um
+// jogador que comecasse SP e fosse tentar CE perdia SP de vez, mesmo sem
+// ter perdido o jogo la. Agora cada regiao guarda seu proprio "de onde
+// parei", atualizado a cada dia jogado, independente de qual esta ativa.
+let progresso = carregarProgresso();
+
+function carregarProgresso() {
+  try {
+    const cru = JSON.parse(localStorage.getItem("dindin-progresso") ?? "{}");
+    return (cru && typeof cru === "object" && !Array.isArray(cru)) ? cru : {};
+  } catch {
+    return {};
+  }
+}
+
+function salvarProgresso(mapa) {
+  progresso = mapa;
+  try {
+    localStorage.setItem("dindin-progresso", JSON.stringify(mapa));
+  } catch { /* modo privado/sem quota: joga sem guardar */ }
+}
+
+/** Grava o estado atual como o progresso da sua regiao. Chamado apos cada
+ * dia jogado -- e a unica escrita automatica, sem depender do jogador
+ * lembrar de clicar em salvar. */
+function registrarProgresso(estadoAtual) {
+  const mapa = { ...progresso };
+  mapa[estadoAtual.regiao] = {
+    dia: estadoAtual.dia, caixa: estadoAtual.caixa, estado: estadoAtual,
+  };
+  salvarProgresso(mapa);
+}
+
+/** Tira uma regiao do mapa de progresso: a jornada acabou (venceu ou
+ * faliu), nao faz sentido "continuar" um jogo que ja terminou. */
+function limparProgresso(regiao) {
+  const mapa = { ...progresso };
+  delete mapa[regiao];
+  salvarProgresso(mapa);
+}
 // null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
 let gelo = null;
 // Refaz a tela atual depois de trocar o tema. So telaDia/telaRelatorio tem
@@ -137,7 +179,7 @@ function restaurarDeDump(dump) {
       activeGame: !!oldEstado.dia
     };
   }
-  const keys = ["dindin-tema", "dindin-conquistas"];
+  const keys = ["dindin-tema", "dindin-conquistas", "dindin-progresso"];
   keys.forEach(k => localStorage.removeItem(k));
   if (dump.localStorage) {
     Object.entries(dump.localStorage).forEach(([k, v]) => {
@@ -147,6 +189,7 @@ function restaurarDeDump(dump) {
   tema = localStorage.getItem("dindin-tema") === "claro" ? "claro" : "escuro";
   document.documentElement.dataset.tema = tema;
   conquistas = carregarConquistas();
+  progresso = carregarProgresso();
   if (dump.estado) {
     // Passa pela bridge (nao so `estado = dump.estado` cru): ela valida os
     // campos obrigatorios do GameState -- um arquivo mao-editado ou de
@@ -337,14 +380,22 @@ function telaRegioes() {
          </svg><span>${t("campanha.vencida")}</span>`;
       cena.append(selo);
     }
+    const emAndamento = !r.vencida ? progresso[r.key] : null;
     const corpo = el("div", "corpo");
     corpo.innerHTML =
       `<div class="produto">${r.produto}</div>
        <div class="uf">${r.nome} · ${r.gentilico}</div>
        <div class="giria">"${r.giria.join('", "')}"</div>
-       <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>`;
+       <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>` +
+      (emAndamento
+        ? `<div class="progresso-regiao">${t("regiao.progresso",
+            { dia: emAndamento.dia, caixa: money(emAndamento.caixa) })}</div>`
+        : "");
     b.append(cena, corpo);
-    b.onclick = () => comecar(r.key);
+    // Regiao com jornada salva retoma de onde parou; sem progresso (ou ja
+    // vencida) comeca um jogo novo -- vencer limpa o progresso, entao uma
+    // regiao vencida sempre volta a comecar do zero se jogada de novo.
+    b.onclick = () => emAndamento ? continuarJornada(r.key) : comecar(r.key);
     grade.append(b);
   }
   app.append(grade);
@@ -359,6 +410,23 @@ function comecar(regiao) {
   catalogo = eng.catalogo(regiao, estado.locais_desbloqueados, lang);
   history.replaceState({}, "",
     `?r=${regiao}&seed=${seed}${lang === "en" ? "&lang=en" : ""}`);
+  telaDia();
+}
+
+/** Retoma uma jornada salva automaticamente (dindin-progresso), em vez de
+ * comecar()/novoJogo() do zero. Mesma bridge de validacao do restore por
+ * arquivo -- se o progresso salvo estiver corrompido, cai pra comecar(). */
+function continuarJornada(regiao) {
+  const salvo = progresso[regiao];
+  try {
+    estado = eng.restaurarEstado(salvo.estado);
+  } catch {
+    comecar(regiao);
+    return;
+  }
+  catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
+  history.replaceState({}, "",
+    `?r=${estado.regiao}&seed=${estado.seed}${lang === "en" ? "&lang=en" : ""}`);
   telaDia();
 }
 
@@ -1168,6 +1236,7 @@ function rodarDia() {
   const plano = { compras: carrinho, producao, precos, gelo: sacos };
   const out = eng.jogarDia(estado, plano);
   estado = out.estado;
+  if (!estado.encerrado) registrarProgresso(estado);
   telaRelatorio(out.resultado, out.desbloqueou);
 }
 
@@ -1343,6 +1412,9 @@ const falaDe = (tag) => {
 };
 
 function telaFim() {
+  // Ganhou ou faliu, a jornada dessa regiao acabou -- nao ha o que
+  // "continuar" mais, entao sai do mapa de progresso em andamento.
+  limparProgresso(estado.regiao);
   const app = $("#app");
   app.innerHTML = "";
   const c = el("div", "cartao");

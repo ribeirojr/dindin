@@ -255,6 +255,13 @@ header .marca {
   font-size: 12px; color: var(--color-neutral-500); margin-top: 2px;
   padding-top: 8px; border-top: 1px solid var(--color-divider);
 }
+/* Jornada em andamento nessa regiao (nao vencida, mas tem progresso salvo
+ * automaticamente). Cor de destaque pra diferenciar de "sai muito", que e
+ * so informativo -- este chip diz "clicar aqui continua de onde parou". */
+.regiao .progresso-regiao {
+  font-size: 12px; font-weight: 700; color: var(--color-accent-300);
+  margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--color-divider);
+}
 
 /* ---------- clima ---------- */
 .clima { display: flex; align-items: center; gap: 14px; }

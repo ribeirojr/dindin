@@ -191,6 +191,7 @@ BASE_EN: dict[str, str] = {
     "regiao.subtitulo": "The treat changes name in every state — and the "
                         "climate, tastes and prices change with it.",
     "regiao.sai_muito": "Big sellers",
+    "regiao.progresso": "Day {dia} · {caixa}",
     "ui.fama": "Fame",
     "ui.no_caixa": "Cash on hand",
     "ui.meta_curta": "Goal",
