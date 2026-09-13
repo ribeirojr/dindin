@@ -11,6 +11,7 @@ class Region:
     key: str
     nome: str
     gentilico: str
+    capital: str
     clima: Mapping[Season, Mapping[WeatherKind, float]]
     base_temp_c: tuple[float, float]
     preferencia: Mapping[str, float]

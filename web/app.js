@@ -381,10 +381,15 @@ function telaRegioes() {
       cena.append(selo);
     }
     const emAndamento = !r.vencida ? progresso[r.key] : null;
+    // Capital repete o nome em RJ/SP (a "regiao" e a propria capital) --
+    // nesses casos so o gentilico ja diz tudo, sem redundancia na tela.
+    const uf = r.capital && r.capital !== r.nome
+      ? `${r.nome} · ${r.capital} · ${r.gentilico}`
+      : `${r.nome} · ${r.gentilico}`;
     const corpo = el("div", "corpo");
     corpo.innerHTML =
       `<div class="produto">${r.produto}</div>
-       <div class="uf">${r.nome} · ${r.gentilico}</div>
+       <div class="uf">${uf}</div>
        <div class="giria">"${r.giria.join('", "')}"</div>
        <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>` +
       (emAndamento

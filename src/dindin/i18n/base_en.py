@@ -335,10 +335,32 @@ BASE_EN: dict[str, str] = {
 OVERRIDES_EN: dict[str, dict[str, str]] = {
     "ce": {"produto.sing": "dindin", "produto.plur": "dindins"},
     "rj": {"produto.sing": "sacolé", "produto.plur": "sacolés"},
-    "mg": {"produto.sing": "laranjinha", "produto.plur": "laranjinhas"},
+    "mg": {
+        "produto.sing": "laranjinha", "produto.plur": "laranjinhas",
+        # Belo Horizonte is landlocked -- chapter 3 becomes the Pampulha lake.
+        "local.praia": "Lagoa da Pampulha",
+        "dica.praia": "Weekends the Pampulha fills up with joggers and "
+                      "couples — but Monday morning it's just pigeons.",
+    },
     "sp": {"produto.sing": "geladinho", "produto.plur": "geladinhos"},
-    "rs": {"produto.sing": "gelinho", "produto.plur": "gelinhos"},
-    "pa": {"produto.sing": "chup-chup", "produto.plur": "chup-chups"},
+    "rs": {
+        "produto.sing": "gelinho", "produto.plur": "gelinhos",
+        # Porto Alegre sits on the Guaíba river/lake, not the coast --
+        # chapter 3 becomes its riverside promenade instead of a beach.
+        "local.praia": "Orla do Guaíba",
+        "dica.praia": "Locals come for the sunset and a chimarrão on the "
+                      "Orla — but strong afternoon sun clears it out, "
+                      "nobody trades shade for a popsicle.",
+    },
+    "pa": {
+        "produto.sing": "chup-chup", "produto.plur": "chup-chups",
+        # Belém sits on Guajará Bay, a river estuary, not the ocean coast --
+        # chapter 3 becomes its historic waterfront market instead.
+        "local.praia": "Ver-o-Peso",
+        "dica.praia": "Early morning the Ver-o-Peso market is already "
+                      "packed — but after lunch the Amazon heat clears "
+                      "the whole waterfront out.",
+    },
     "df": {
         "produto.sing": "geladim", "produto.plur": "geladins",
         # DF has no beach -- chapter 3 becomes the Esplanada dos Ministérios.

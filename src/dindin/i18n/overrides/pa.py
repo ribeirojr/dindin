@@ -26,4 +26,10 @@ OVERRIDE: dict[str, str] = {
     "cap.vitoria": "Tu conseguiu, maninho! Pai d'égua!",
     "evento.cirio_nazare": "Égua, é o Círio! A cidade inteira na rua.",
     "evento.chuva_das_duas": "Chuva das duas, maninho. Na hora certa.",
+    # Belem fica na Baia do Guajara (estuario do rio, agua de rio, nao
+    # litoral aberto). Capitulo 3 vira o Ver-o-Peso em vez de uma praia.
+    "local.praia": "Ver-o-Peso",
+    "dica.praia": "De manhã cedo o Ver-o-Peso já tá cheio de gente na feira "
+                  "— mas depois do almoço o calor amazônico esvazia a orla "
+                  "toda.",
 }

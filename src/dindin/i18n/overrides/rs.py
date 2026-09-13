@@ -26,4 +26,10 @@ OVERRIDE: dict[str, str] = {
     "cap.vitoria": "Tu conseguiu, tchê! Tri demais!",
     "evento.minuano": "Bah, o minuano baixou. Ninguém quer gelado.",
     "evento.semana_farroupilha": "Semana Farroupilha, tchê. Movimento tri bom.",
+    # Porto Alegre fica no Guaiba (rio/lago), nao no litoral. Capitulo 3
+    # vira a Orla do Guaiba em vez de uma praia de mar.
+    "local.praia": "Orla do Guaíba",
+    "dica.praia": "O gaúcho vem ver o pôr do sol e tomar chimarrão na Orla "
+                  "— mas sol forte de tarde esvazia tudo, ninguém troca a "
+                  "sombra por sorvete.",
 }
