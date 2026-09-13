@@ -266,7 +266,7 @@ function telaDia() {
   pl.append(el("div", "aviso", t(`dica.${estado.local_atual}`)));
   coluna.append(pl);
 
-  // --- clima
+  // --- clima + o que sai bem nessa regiao
   const cc = el("div", "cartao");
   cc.append(el("h2", null, t("ui.clima_amanha")));
   const cl = el("div", "clima");
@@ -278,6 +278,13 @@ function telaDia() {
        <div class="dica" style="color:${dicaCor(clima)}">${dicaTexto(clima)}</div>
      </div>`;
   cc.append(cl);
+  const favoritos = [...catalogo.sabores]
+    .sort((a, b) => b.preferencia - a.preferencia)
+    .slice(0, 3);
+  if (favoritos.length) {
+    cc.append(el("div", "favs-regiao",
+      `${t("regiao.sai_muito")}: ${favoritos.map((f) => f.nome).join(", ")}`));
+  }
   coluna.append(cc);
 
   // --- isopor (equipamento, antes de gastar na feira)
@@ -807,9 +814,9 @@ function telaRelatorio(r, desbloqueou) {
   heroTexto.innerHTML =
     `<div class="eyebrow">${t("ui.dia")} ${r.dia} · ${t("local." + estado.local_atual)} · ${Math.round(r.clima.temp_c)}°C</div>
      <h2>${ICONE[r.clima.kind] ?? "☀️"} ${t("clima." + r.clima.kind)}</h2>`;
-  const hClima = el("p");
-  hClima.innerHTML = t("rel.titulo");
-  heroTexto.append(hClima);
+  const hResumo = el("p");
+  hResumo.textContent = r.resumo_key ? t(r.resumo_key) : t("rel.titulo");
+  heroTexto.append(hResumo);
   const heroCena = el("div", "cena-svg");
   heroCena.innerHTML = CENA_RELATORIO[tema] ?? CENA_RELATORIO.escuro;
   hero.append(heroTexto, heroCena);
@@ -889,10 +896,6 @@ function telaRelatorio(r, desbloqueou) {
   const bm = el("div", "barra-meta");
   bm.innerHTML = `<i style="width:${pct}%"></i>`;
   c.append(bm);
-
-  if (r.resumo_key) {
-    c.append(el("p", "resumo-dia", t(r.resumo_key)));
-  }
 
   // --- sidebar: falas da freguesia + acao de seguir pro proximo dia
   const sidebar = el("div", "rel-sidebar");

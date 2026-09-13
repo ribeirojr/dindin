@@ -24,6 +24,7 @@ class ReportScreen(Screen[None]):
         r = self.resultado
         yield Static(f"{self.tr.t('rel.titulo')} — {self.tr.t('ui.dia')} {r.dia}",
                      classes="titulo-tela")
+        yield Static(self.tr.t(resumo_do_dia(r)), classes="subtitulo-tela")
         with Horizontal():
             yield WeatherCard(self.tr, classes="painel")
             yield Static("", id="eventos-dia", classes="painel")
@@ -35,7 +36,6 @@ class ReportScreen(Screen[None]):
             yield StatTile(self.tr.t("ui.caixa"), id="t-caixa")
         yield Static("", id="meta-label", classes="aviso")
         yield ProgressBar(total=100, show_eta=False, id="barra-meta")
-        yield Static("", id="resumo-dia", classes="resumo-dia")
         with Horizontal(classes="linha-botoes"):
             yield Button(self.tr.t("ui.proximo_dia"), variant="success", id="ok")
         yield Footer()
@@ -84,9 +84,6 @@ class ReportScreen(Screen[None]):
             f"{self.tr.t('ui.meta')}: {money(r.caixa_final)} / {money(meta)}"
         )
         self.query_one("#barra-meta", ProgressBar).update(progress=pct)
-
-        self.query_one("#resumo-dia", Static).update(
-            f"[i]{self.tr.t(resumo_do_dia(r))}[/]")
         self.query_one("#ok", Button).focus()
 
     def action_seguir(self) -> None:

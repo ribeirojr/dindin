@@ -9,8 +9,9 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
-from ...content.flavors import sabores_disponiveis
+from ...content.flavors import SABORES, sabores_disponiveis
 from ...content.locations import LOCAIS
+from ...content.regions import REGIOES
 from ...i18n import money
 from ..widgets import SceneCard, WeatherCard
 
@@ -59,6 +60,15 @@ class PlanScreen(Screen[None]):
         if self.state.local_atual != "casa" and self.state.isopor:
             linhas.append(
                 f"[dim]Isopor[/]  aguenta mais {self.state.isopor_dias} dia(s)")
+
+        # O que sai bem aqui -- so aparecia na escolha de regiao, sumia
+        # assim que a partida comecava. Util em qualquer dia da campanha.
+        regiao = REGIOES[self.state.regiao]
+        favoritos = sorted(regiao.preferencia.items(), key=lambda kv: -kv[1])[:3]
+        nomes = ", ".join(SABORES[k].nome for k, _ in favoritos if k in SABORES)
+        if nomes:
+            linhas.append(f"[dim]{self.tr.t('regiao.sai_muito')}[/]  {nomes}")
+
         self.query_one("#plano-resumo", Static).update("\n".join(linhas))
 
         self.query_one("#plano-dica", Static).update(

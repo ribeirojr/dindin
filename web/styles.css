@@ -235,6 +235,10 @@ header .marca {
 .clima .temp { font-family: var(--font-heading); font-size: 26px; font-weight: 800; }
 .clima .desc { color: var(--color-neutral-400); font-size: 13px; }
 .dica { font-size: 13px; font-weight: 700; margin-top: 4px; }
+.favs-regiao {
+  font-size: 12px; color: var(--color-neutral-500); margin-top: 12px;
+  padding-top: 10px; border-top: 1px solid var(--color-divider);
+}
 
 /* ---------- tabelas ---------- */
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -290,11 +294,6 @@ input[type=range] { flex: 1; accent-color: var(--color-accent); }
   border-left: 3px solid var(--color-gold);
   padding: 10px 12px; border-radius: 6px; font-size: 13px; margin-top: 10px;
   color: var(--color-text);
-}
-
-.resumo-dia {
-  font-style: italic; color: var(--color-neutral-400);
-  margin-top: 12px; font-size: 13px;
 }
 
 /* ---------- relatorio ---------- */
