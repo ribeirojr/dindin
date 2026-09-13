@@ -686,9 +686,9 @@ input[type=range] { min-width: 140px; }
   bottom: 24px;
   right: 24px;
   padding: 12px 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  color: #fff;
   font-weight: 500;
   z-index: 10000;
   opacity: 0;
@@ -700,11 +700,13 @@ input[type=range] { min-width: 140px; }
   transform: translateY(-8px);
 }
 .toast.sucesso {
-  background: #009c3b;
+  background: var(--color-green);
 }
 .toast.erro {
-  background: #c00;
+  background: var(--color-rose);
 }
+/* Cortina fixa por cima da tela inteira: nao e uma superficie do tema, fica
+ * preta/branca em qualquer modo (igual a tela de carregamento). */
 .drop-overlay {
   position: fixed;
   inset: 0;
@@ -717,8 +719,8 @@ input[type=range] { min-width: 140px; }
 .drop-box {
   border: 4px dashed #fff;
   padding: 40px 60px;
-  border-radius: 16px;
-  color: white;
+  border-radius: var(--radius-lg);
+  color: #fff;
   text-align: center;
   font-size: 1.1rem;
   background: rgba(0,0,0,0.5);

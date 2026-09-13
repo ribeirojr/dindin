@@ -111,7 +111,7 @@ function dumpJornada(estadoAtual) {
   a.download = `dindin-dia${String(estadoAtual.dia).padStart(2, "0")}-${shortId}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  mostrarToast("Jornada guardada! O isopor tá seguro na memória, vixe.");
+  mostrarToast(t("jornada.toast_salvo"));
 }
 
 function restaurarDeDump(dump) {
@@ -148,9 +148,16 @@ function restaurarDeDump(dump) {
   document.documentElement.dataset.tema = tema;
   conquistas = carregarConquistas();
   if (dump.estado) {
-    estado = dump.estado;
-    if (dump.journey) {
-      estado.locais_desbloqueados = dump.journey.locais_desbloqueados || estado.locais_desbloqueados;
+    // Passa pela bridge (nao so `estado = dump.estado` cru): ela valida os
+    // campos obrigatorios do GameState -- um arquivo mao-editado ou de
+    // outra versao estoura aqui, num catch, em vez de quebrar mais tarde
+    // dentro de jogarDia(). Tambem corrige local_atual via melhor_local(),
+    // entao nao precisa mais remendar locais_desbloqueados na mao aqui.
+    try {
+      estado = eng.restaurarEstado(dump.estado);
+    } catch {
+      mostrarToast(t("jornada.erro"), "erro");
+      return;
     }
     catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
   }
@@ -160,11 +167,20 @@ function restaurarDeDump(dump) {
 
 function setupDragDrop() {
   const overlay = el("div", "drop-overlay");
-  overlay.innerHTML = `<div class="drop-box">Arraste o save.json aqui (dindin-diaXX-ABCDEF.json) para restaurar a jornada. Salva automaticamente no fim de cada dia.</div>`;
+  const box = el("div", "drop-box");
+  overlay.append(box);
   overlay.style.display = "none";
   document.body.append(overlay);
   let dragCounter = 0;
-  const showOverlay = () => { dragCounter++; overlay.style.display = "flex"; };
+  // Texto so e montado ao mostrar: setupDragDrop roda no boot, antes de
+  // telaRegioes() carregar o catalogo -- e t() sem catalogo devolve so a
+  // chave crua. Na hora que o jogador arrasta um arquivo de verdade, o
+  // catalogo ja foi carregado ha muito tempo.
+  const showOverlay = () => {
+    dragCounter++;
+    box.textContent = t("jornada.instrucao");
+    overlay.style.display = "flex";
+  };
   const hideOverlay = () => { dragCounter = Math.max(0, dragCounter-1); if (dragCounter === 0) overlay.style.display = "none"; };
   document.addEventListener("dragenter", (e) => {
     if (e.dataTransfer.types.includes("Files")) showOverlay();
@@ -249,6 +265,7 @@ function telaRegioes() {
   }
   picker.append(botaoTema());
   const carregarBtn = el("button", "backup-btn secundaria", t("jornada.carregar"));
+  carregarBtn.title = t("jornada.ajuda");
   carregarBtn.onclick = () => {
     const input = el("input");
     input.type = "file";
@@ -516,6 +533,8 @@ function cabecalho(clima) {
   h.append(s);
   h.append(botaoTema());
   const salvarBtn = el("button", "backup-btn", "💾");
+  salvarBtn.title = t("jornada.salvar");
+  salvarBtn.setAttribute("aria-label", t("jornada.salvar"));
   salvarBtn.onclick = () => dumpJornada(estado);
   h.append(salvarBtn);
   return h;
@@ -610,11 +629,15 @@ function telaDia() {
   // --- gelo (depende do quanto foi produzido)
   const gl = cartaoGelo();
   if (gl) coluna.append(gl);
-  // Monta a tabela ja: esperar timeout deixava a cozinha vazia num primeiro frame.
-  recarregarCozinha();
 
   layout.append(sidebarDia(local0));
+  // So agora o layout esta na arvore do documento: recarregarCozinha() e
+  // montarPreco() procuram os elementos por #id via document.querySelector,
+  // que so acha nos ja anexados. Chamar antes do append (como era) deixava
+  // o preco vazio no primeiro frame -- e um "vender" imediato ia sem preco
+  // pra nenhum sabor, sumindo com a venda inteira do relatorio.
   app.append(layout);
+  recarregarCozinha();
 }
 
 /** Tira de status: onde a progressao ja libera vender, ponto atual em destaque. */
