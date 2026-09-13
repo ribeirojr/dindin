@@ -109,11 +109,15 @@ function telaRegioes() {
   const app = $("#app");
   app.innerHTML = "";
 
+  const replLink = el("button", "repl-link", t("repl.menu_link"));
+  replLink.onclick = telaRepl;
+  app.append(replLink);
+
   // O seletor de idioma + tema: controles fixos no topo da tela.
   const picker = el("div", "lang-picker");
-  for (const [codigo, rotulo] of [["pt", "Português"], ["en", "English"]]) {
+  for (const [codigo, bandeira, rotulo] of [["pt", "🇧🇷", "Português"], ["en", "🇺🇸", "English"]]) {
     const chip = el("button", "lang-chip" + (lang === codigo ? " ativa" : ""),
-                    rotulo);
+                    `${bandeira} ${rotulo}`);
     chip.onclick = () => {
       if (lang === codigo) return;
       lang = codigo;
@@ -126,10 +130,6 @@ function telaRegioes() {
   }
   picker.append(botaoTema());
   app.append(picker);
-
-  const replLink = el("button", "repl-link", t("repl.menu_link"));
-  replLink.onclick = telaRepl;
-  app.append(replLink);
 
   // --- hero: titulo grande + cena de abertura
   const hero = el("div", "hero");
