@@ -682,12 +682,9 @@ input[type=range] { min-width: 140px; }
 }
 
 /* ---------- repl de python (tela de aprendizado) ---------- */
-.repl-link {
-  display: block; margin: 4px 0 18px; padding: 10px 16px;
-  border: 1px solid var(--color-divider); border-radius: 10px;
-  background: var(--color-surface-2); color: var(--color-accent-300);
-  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
-}
+/* Mesmo pill do seletor de idioma (.lang-chip), so com o texto em destaque
+ * pra chamar atencao sem quebrar a fileira de controles do topo. */
+.repl-link { color: var(--color-accent-300); font-weight: 700; margin-right: auto; }
 .repl-link:hover { border-color: var(--color-accent); }
 
 .repl-cartao { max-width: 760px; margin: 0 auto; }

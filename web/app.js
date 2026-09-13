@@ -109,12 +109,11 @@ function telaRegioes() {
   const app = $("#app");
   app.innerHTML = "";
 
-  const replLink = el("button", "repl-link", t("repl.menu_link"));
-  replLink.onclick = telaRepl;
-  app.append(replLink);
-
   // O seletor de idioma + tema: controles fixos no topo da tela.
   const picker = el("div", "lang-picker");
+  const replLink = el("button", "lang-chip repl-link", t("repl.menu_link"));
+  replLink.onclick = telaRepl;
+  picker.append(replLink);
   for (const [codigo, bandeira, rotulo] of [["pt", "🇧🇷", "Português"], ["en", "🇺🇸", "English"]]) {
     const chip = el("button", "lang-chip" + (lang === codigo ? " ativa" : ""),
                     `${bandeira} ${rotulo}`);
