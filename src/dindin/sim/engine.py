@@ -242,3 +242,34 @@ def advance_day(state: GameState, plan: DayPlan,
     state.dia += 1
     state.encerrado = progression.checar_fim(state)
     return resultado
+
+
+def resumo_do_dia(resultado: DayResult) -> str:
+    """Um veredito de uma linha pro fim do dia: a chave de i18n "resumo.<x>".
+
+    So diagnostica -- nao decide nada do jogo. Ordem importa: cada `if`
+    e mais especifico que o de baixo, entao o primeiro que bater vence
+    (ex: "derreteu muito" so aparece se nao foi tambem um dia sem venda
+    nenhuma, que e pior e fala mais alto).
+    """
+    vendidos = resultado.vendidos
+    ofertados = sum(f.ofertados for f in resultado.por_sabor)
+    perdido_derretimento = sum(
+        f.perdidos_derretimento for f in resultado.por_sabor)
+    faltou = resultado.demanda_nao_atendida
+
+    if vendidos == 0:
+        if ofertados == 0:
+            return "resumo.nada_pra_vender"
+        return "resumo.zero_venda"
+    if perdido_derretimento > 0 and perdido_derretimento >= vendidos:
+        return "resumo.derreteu_muito"
+    if faltou > 0 and faltou >= vendidos:
+        return "resumo.faltou_estoque"
+    if resultado.lucro < 0:
+        return "resumo.prejuizo"
+    if ofertados > 0 and vendidos >= ofertados and faltou == 0:
+        return "resumo.sellout_limpo"
+    if resultado.receita > 0 and resultado.lucro >= resultado.receita // 2:
+        return "resumo.lucro_forte"
+    return "resumo.dia_normal"

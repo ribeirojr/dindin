@@ -890,6 +890,10 @@ function telaRelatorio(r, desbloqueou) {
   bm.innerHTML = `<i style="width:${pct}%"></i>`;
   c.append(bm);
 
+  if (r.resumo_key) {
+    c.append(el("p", "resumo-dia", t(r.resumo_key)));
+  }
+
   // --- sidebar: falas da freguesia + acao de seguir pro proximo dia
   const sidebar = el("div", "rel-sidebar");
   if (r.barks?.length) {

@@ -9,6 +9,7 @@ from textual.widgets import Button, DataTable, Footer, ProgressBar, Static
 from ...content.flavors import SABORES
 from ...content.locations import LOCAIS
 from ...i18n import money
+from ...sim.engine import resumo_do_dia
 from ..widgets import StatTile, WeatherCard
 
 
@@ -34,6 +35,7 @@ class ReportScreen(Screen[None]):
             yield StatTile(self.tr.t("ui.caixa"), id="t-caixa")
         yield Static("", id="meta-label", classes="aviso")
         yield ProgressBar(total=100, show_eta=False, id="barra-meta")
+        yield Static("", id="resumo-dia", classes="resumo-dia")
         with Horizontal(classes="linha-botoes"):
             yield Button(self.tr.t("ui.proximo_dia"), variant="success", id="ok")
         yield Footer()
@@ -82,6 +84,9 @@ class ReportScreen(Screen[None]):
             f"{self.tr.t('ui.meta')}: {money(r.caixa_final)} / {money(meta)}"
         )
         self.query_one("#barra-meta", ProgressBar).update(progress=pct)
+
+        self.query_one("#resumo-dia", Static).update(
+            f"[i]{self.tr.t(resumo_do_dia(r))}[/]")
         self.query_one("#ok", Button).focus()
 
     def action_seguir(self) -> None:

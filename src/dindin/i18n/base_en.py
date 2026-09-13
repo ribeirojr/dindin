@@ -95,6 +95,16 @@ BASE_EN: dict[str, str] = {
     "rel.chuva": "It rained and the street was empty.",
     "rel.nada_vendido": "Nothing sold today.",
 
+    # --- day summary: one short verdict, the closing line of the report ---
+    "resumo.nada_pra_vender": "Nobody brought anything to sell today — lost before it started.",
+    "resumo.zero_venda": "Dead all day. Tomorrow's another day.",
+    "resumo.derreteu_muito": "The heat won: more melted than sold. Needed more ice.",
+    "resumo.faltou_estoque": "Sold out fast, people still wanting more. Make extra tomorrow.",
+    "resumo.prejuizo": "In the red today — cash took a hit, but the stand goes on.",
+    "resumo.sellout_limpo": "Brought the right amount, sold it all, nobody left empty-handed.",
+    "resumo.lucro_forte": "Fat day! Profit ate up most of the revenue.",
+    "resumo.dia_normal": "A day like any other: sold some, paid the bills, moved on.",
+
     # --- capitulos ---
     "local.casa": "Home freezer",
     "local.isopor": "Street cooler",

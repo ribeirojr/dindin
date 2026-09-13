@@ -107,6 +107,11 @@ DataTable {
     padding: 0 2;
 }
 
+.resumo-dia {
+    color: $text-muted;
+    padding: 1 2 0 2;
+}
+
 #feed-barks {
     height: 12;
     border: round $accent;

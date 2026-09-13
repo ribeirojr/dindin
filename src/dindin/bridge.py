@@ -20,7 +20,12 @@ from .i18n.base_ptbr import BASE
 from .sim.types import BarkTag
 from .sim import campaign, economy, progression
 from .sim.demand import f_preco, tolerancia_efetiva
-from .sim.engine import advance_day, clima_do_dia, tolerancia_efetiva_do_dia
+from .sim.engine import (
+    advance_day,
+    clima_do_dia,
+    resumo_do_dia,
+    tolerancia_efetiva_do_dia,
+)
 from .sim.freezer import capacidade_dia, capacidade_total
 from .sim.state import DayPlan, GameState, Inventory, Lote
 
@@ -426,8 +431,10 @@ def jogar_dia(estado: dict, plano: dict) -> dict:
     resultado = advance_day(state, day_plan, gasto_previo=gasto)
 
     prox = progression.pode_desbloquear(state)
+    resultado_json = _jsonify(resultado)
+    resultado_json["resumo_key"] = resumo_do_dia(resultado)
     return {
-        "resultado": _jsonify(resultado),
+        "resultado": resultado_json,
         "estado": estado_para_json(state),
         "desbloqueou": prox,
     }

@@ -90,6 +90,16 @@ BASE: dict[str, str] = {
     "rel.chuva": "Choveu e a rua ficou vazia.",
     "rel.nada_vendido": "Não vendeu nada hoje.",
 
+    # --- resumo do dia: um veredito curto, o fecho do relatorio ---
+    "resumo.nada_pra_vender": "Hoje ninguém levou nada pro ponto — dia perdido antes de começar.",
+    "resumo.zero_venda": "Ficou parado o dia inteiro. Amanhã é outro dia.",
+    "resumo.derreteu_muito": "O calor venceu: mais derreteu do que vendeu. Faltou gelo.",
+    "resumo.faltou_estoque": "Vendeu tudo rapidinho e sobrou gente querendo. Bora fazer mais.",
+    "resumo.prejuizo": "No vermelho hoje — o caixa encolheu, mas a praça continua.",
+    "resumo.sellout_limpo": "Levou certinho, vendeu tudo, ninguém ficou na mão. Redondo.",
+    "resumo.lucro_forte": "Dia gordo! O lucro comeu boa parte da receita.",
+    "resumo.dia_normal": "Um dia como outro qualquer: vendeu, pagou as contas, seguiu.",
+
     # --- capitulos ---
     "local.casa": "Freezer de casa",
     "local.isopor": "Isopor na rua",

@@ -292,6 +292,11 @@ input[type=range] { flex: 1; accent-color: var(--color-accent); }
   color: var(--color-text);
 }
 
+.resumo-dia {
+  font-style: italic; color: var(--color-neutral-400);
+  margin-top: 12px; font-size: 13px;
+}
+
 /* ---------- relatorio ---------- */
 .tiles { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 10px; margin: 14px 0; }
 .tile { background: var(--color-surface-2); border-radius: var(--radius-md); padding: 12px; text-align: center; }

@@ -332,3 +332,18 @@ def test_placar_zera_quando_vence_todas():
     out = bridge.placar_campanha(chaves)
     assert out["zerou"]
     assert out["pendentes"] == []
+
+
+def test_jogar_dia_traz_a_chave_do_resumo():
+    st = bridge.novo_jogo("pa", 77)
+    plano = {
+        "compras": {"polpa_comum": 3, "acucar": 1, "saquinho": 1},
+        "producao": {"coco": 40},
+        "precos": {"coco": 190},
+        "gelo": 0,
+    }
+    out = bridge.jogar_dia(st, plano)
+    chave = out["resultado"]["resumo_key"]
+    assert chave.startswith("resumo.")
+    from dindin.i18n import Translator
+    assert not Translator("pa").t(chave).startswith("⟨missing:")
