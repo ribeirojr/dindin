@@ -132,6 +132,7 @@ if "/jogo" not in sys.path:
   curvaDePreco(estado, flavor) { return this._call("curva_de_preco", estado, flavor); }
   jogarDia(estado, plano) { return this._call("jogar_dia", estado, plano); }
   mudarDePonto(estado, local) { return this._call("mudar_de_ponto", estado, local); }
+  restaurarEstado(estado) { return this._call("restaurar_estado", estado); }
   isopores(estado, lang) { return this._call("isopores", estado, lang ?? "pt"); }
   comprarIsopor(estado, key) { return this._call("comprar_isopor", estado, key); }
   infoDoGelo(estado, unidades) { return this._call("info_do_gelo", estado, unidades); }

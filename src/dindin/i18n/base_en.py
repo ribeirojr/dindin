@@ -267,6 +267,16 @@ BASE_EN: dict[str, str] = {
     "cap.mudar": "Move to {nome}",
     "fim.resumo": "{d} days · cash {c} · fame {f}",
 
+    # --- jornada / backup (save your popsicle journey) ---
+    "jornada.salvar": "Save your popsicle journey",
+    "jornada.baixar": "Download save",
+    "jornada.carregar": "Load journey",
+    "jornada.instrucao": "Drop your dindin-diaXX-ABCDEF.json here (or click). Auto-saves at end of each day after selling — continue exactly where you left off without melting your profits.",
+    "jornada.toast_salvo": "Journey saved! The cooler is safe in memory.",
+    "jornada.toast_carregado": "Journey restored. On to the next day!",
+    "jornada.erro": "Invalid file. Only Dindin saves (dindin-dia*.json).",
+    "jornada.ajuda": "Save the journey of your popsicle across Brazil.",
+
     # --- campanha: cada regiao e um cenario pra vencer ---
     "campanha.vencida": "beaten",
     "campanha.placar": "{n} of {total} regions beaten",

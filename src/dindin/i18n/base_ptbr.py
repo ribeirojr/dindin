@@ -263,6 +263,16 @@ BASE: dict[str, str] = {
     "cap.mudar": "Mudar pra {nome}",
     "fim.resumo": "{d} dias · caixa {c} · fama {f}",
 
+    # --- jornada / backup (salva a viagem do isopor) ---
+    "jornada.salvar": "Bora salvar essa jornada arretada, ma broca? Isopor cheio de dindin bom, égua!",
+    "jornada.baixar": "Baixar o save do dia",
+    "jornada.carregar": "Carregar jornada salva",
+    "jornada.instrucao": "Arraste o dindin-diaXX-ABCDEF.json aqui (ou clique). Salva no fim de cada dia após vender — continua de onde parou sem derreter o lucro.",
+    "jornada.toast_salvo": "Jornada guardada! O isopor tá seguro na memória, vixe.",
+    "jornada.toast_carregado": "Jornada restaurada. Bora pro próximo dia, meu consagrado!",
+    "jornada.erro": "Arquivo inválido. Só saves do Dindin (dindin-dia*.json).",
+    "jornada.ajuda": "Salva a viagem do seu isopor pelo Brasil, parça.",
+
     # --- campanha: cada regiao e um cenario pra vencer ---
     "campanha.vencida": "vencida",
     "campanha.placar": "{n} de {total} regiões vencidas",
