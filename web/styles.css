@@ -116,6 +116,33 @@ header .marca {
 .stat-clima .icone { font-size: 15px; line-height: 1; }
 .stat-clima span { color: var(--color-neutral-500); text-transform: none; letter-spacing: 0; }
 
+/* ---------- menu do cabecalho (tema, salvar, trocar de regiao) ---------- */
+/* Junta tres acoes que antes eram botoes soltos disputando espaco com os
+ * stats do dia. Mesmo padrao de toggle por clique do ".ajuda" (funciona
+ * igual em touch e mouse, sem depender de :hover). */
+.menu-cabecalho { position: relative; }
+.menu-toggle {
+  width: 34px; height: 34px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider); background: transparent;
+  color: var(--color-neutral-400); font-size: 18px; line-height: 1;
+  cursor: pointer; font-family: inherit;
+}
+.menu-toggle:hover { border-color: var(--color-accent); color: var(--color-text); }
+.menu-lista {
+  display: none; position: absolute; right: 0; top: calc(100% + 6px);
+  background: var(--color-surface); border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  padding: 6px; min-width: 190px; z-index: 40;
+}
+.menu-cabecalho.aberto .menu-lista { display: flex; flex-direction: column; gap: 2px; }
+.menu-lista button {
+  display: flex; align-items: center; gap: 8px; text-align: left;
+  padding: 9px 10px; border: none; border-radius: 8px; background: transparent;
+  color: var(--color-text); font-family: inherit; font-size: 13.5px;
+  cursor: pointer; white-space: nowrap;
+}
+.menu-lista button:hover { background: var(--color-surface-2); }
+
 /* ---------- cartoes ---------- */
 .cartao {
   background: var(--color-surface); border: 1px solid var(--color-divider);
@@ -227,6 +254,13 @@ header .marca {
 .regiao .favs {
   font-size: 12px; color: var(--color-neutral-500); margin-top: 2px;
   padding-top: 8px; border-top: 1px solid var(--color-divider);
+}
+/* Jornada em andamento nessa regiao (nao vencida, mas tem progresso salvo
+ * automaticamente). Cor de destaque pra diferenciar de "sai muito", que e
+ * so informativo -- este chip diz "clicar aqui continua de onde parou". */
+.regiao .progresso-regiao {
+  font-size: 12px; font-weight: 700; color: var(--color-accent-300);
+  margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--color-divider);
 }
 
 /* ---------- clima ---------- */
@@ -686,9 +720,9 @@ input[type=range] { min-width: 140px; }
   bottom: 24px;
   right: 24px;
   padding: 12px 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  color: #fff;
   font-weight: 500;
   z-index: 10000;
   opacity: 0;
@@ -700,11 +734,13 @@ input[type=range] { min-width: 140px; }
   transform: translateY(-8px);
 }
 .toast.sucesso {
-  background: #009c3b;
+  background: var(--color-green);
 }
 .toast.erro {
-  background: #c00;
+  background: var(--color-rose);
 }
+/* Cortina fixa por cima da tela inteira: nao e uma superficie do tema, fica
+ * preta/branca em qualquer modo (igual a tela de carregamento). */
 .drop-overlay {
   position: fixed;
   inset: 0;
@@ -717,8 +753,8 @@ input[type=range] { min-width: 140px; }
 .drop-box {
   border: 4px dashed #fff;
   padding: 40px 60px;
-  border-radius: 16px;
-  color: white;
+  border-radius: var(--radius-lg);
+  color: #fff;
   text-align: center;
   font-size: 1.1rem;
   background: rgba(0,0,0,0.5);
@@ -726,4 +762,75 @@ input[type=range] { min-width: 140px; }
 .backup-btn {
   padding: 6px 12px;
   font-size: 0.9rem;
+}
+
+/* ---------- repl de python (tela de aprendizado) ---------- */
+/* So a cobrinha, sem rotulo: um easter egg discreto no canto do menu, nao
+ * um item de navegacao chamando atencao pra si. */
+.repl-link {
+  margin-right: auto; width: 32px; height: 32px; padding: 0;
+  border-radius: 50%; font-size: 16px; display: grid; place-items: center;
+}
+.repl-link:hover { border-color: var(--color-accent); transform: scale(1.1); }
+
+.repl-cartao { max-width: 760px; margin: 0 auto; }
+
+/* Cresce com o conteudo -- sem altura maxima nem scroll proprio. A pagina
+ * inteira rola, e o campo de digitar (logo abaixo) acompanha via
+ * scrollIntoView apos cada comando, como um terminal de verdade que faz
+ * parte da pagina em vez de uma janelinha presa. */
+.repl-tela {
+  background: var(--color-bg); border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13.5px;
+  line-height: 1.55;
+}
+.repl-msg.boas-vindas { color: var(--color-neutral-400); margin-bottom: 10px; }
+.repl-msg.boas-vindas code {
+  background: var(--color-surface-2); border-radius: 4px; padding: 1px 5px;
+}
+.repl-dica { color: var(--color-neutral-500); font-size: 12px; margin-bottom: 14px; }
+.repl-bloco { margin-bottom: 10px; }
+.repl-echo { display: flex; gap: 8px; color: var(--color-text); }
+.repl-echo .repl-prompt { color: var(--color-accent-300); flex-shrink: 0; }
+.repl-echo code { white-space: pre-wrap; word-break: break-word; }
+.repl-saida, .repl-erro {
+  white-space: pre-wrap; word-break: break-word; margin: 2px 0 0 22px;
+  font-family: inherit; font-size: inherit;
+}
+.repl-saida { color: var(--color-green); }
+.repl-erro { color: var(--color-rose); }
+
+.repl-linha {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: var(--color-surface-2); border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md); padding: 10px 12px;
+}
+.repl-linha .repl-prompt {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px;
+  color: var(--color-accent-300); font-weight: 700; padding-top: 8px;
+}
+.repl-input {
+  flex: 1; resize: none; min-height: 34px; max-height: 220px;
+  background: transparent; border: none; color: var(--color-text);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px;
+  line-height: 1.5; padding: 6px 0; outline: none;
+}
+.repl-linha button.principal { align-self: center; }
+
+.repl-acoes { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+.repl-exemplos { margin-top: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.repl-exemplos .rotulo { font-size: 12px; color: var(--color-neutral-500); margin-right: 4px; }
+.repl-exemplo {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px;
+  padding: 5px 10px; border-radius: 8px; border: 1px solid var(--color-divider);
+  background: transparent; color: var(--color-neutral-300); cursor: pointer;
+}
+.repl-exemplo:hover { border-color: var(--color-accent); color: var(--color-accent-300); }
+
+@media (max-width: 560px) {
+  .repl-tela { font-size: 13px; }
+  .repl-linha { flex-wrap: wrap; }
+  .repl-linha button.principal { width: 100%; }
 }

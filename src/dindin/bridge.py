@@ -199,6 +199,7 @@ def regioes(lang: str = "pt", conquistas: list[str] | None = None) -> list[dict]
         favoritos = sorted(r.preferencia.items(), key=lambda kv: -kv[1])[:3]
         saida.append({
             "key": key, "nome": r.nome, "gentilico": r.gentilico,
+            "capital": r.capital,
             "produto": tr.produto,
             "vencida": key in feitas,
             "giria": [tr_pt.t("interj.surpresa"), tr_pt.t("interj.positivo"),

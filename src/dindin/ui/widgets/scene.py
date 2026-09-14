@@ -110,8 +110,13 @@ CENAS: dict[str, dict[str, str]] = {
     },
 }
 
-# Excecoes por regiao: mesmo capitulo, outro lugar. DF nao tem praia --
-# o capitulo 3 la e a Esplanada dos Ministerios (ver local.praia no i18n).
+# Excecoes por regiao: mesmo capitulo, outro lugar. Nem toda capital tem
+# praia de mar -- cada uma dessas ganha uma cena propria (ver local.praia
+# no i18n pra cada override de nome/texto):
+#   df: Esplanada dos Ministerios (sem litoral, capital planejada)
+#   mg: Lagoa da Pampulha (Belo Horizonte e mineira do interior)
+#   rs: Orla do Guaiba (Porto Alegre fica no rio/lago, nao no litoral)
+#   pa: Ver-o-Peso (Belem fica na Baia do Guajara, estuario de rio)
 CENAS_REGIAO: dict[str, dict[str, dict[str, str]]] = {
     "df": {
         "praia": {
@@ -133,6 +138,64 @@ CENAS_REGIAO: dict[str, dict[str, dict[str, str]]] = {
 """,
         },
     },
+    "mg": {
+        "praia": {
+            "plano": r"""
+        .-~"~-.        ___
+       (  igreja )    /   \    ___________
+        `-.___.-'    | lago|  /  ISOPOR  /|
+   ~~~~~~~~~~~~~~~~~~~`---'~~/__________/ |
+        pampulha              |░░░░░░░░░| /
+                               |_________|/
+""",
+            "venda": r"""
+        .-~"~-.        ___
+       (  igreja )    /   \  o/  ___________
+        `-.___.-'    | lago|  /| /  ISOPOR  /|
+   ~~~~~~~~~~~~~~~~~~~`---'~~ / \/__________/ |
+                               |▓▓▓▓▓▓▓▓▓| /  "um trem bão!"
+                               |_________|/
+""",
+        },
+    },
+    "rs": {
+        "praia": {
+            "plano": r"""
+       \   |   /        orla do guaíba
+        \  |  /   ___________
+     ────( sol )─/  ISOPOR  /|
+    ~~~~~~~~~~~~/__________/ |
+    ~~ guaíba ~~|░░░░░░░░░| /
+   ~~~~~~~~~~~~~|_________|/
+""",
+            "venda": r"""
+       \   |   /
+        \  |  /   o/  ___________
+     ────( sol )──/| /  ISOPOR  /|
+    ~~~~~~~~~~~~~ / \/__________/ |
+    ~~~~~~~~~~~~~~|▓▓▓▓▓▓▓▓▓| /  "bah, um gelinho, tchê!"
+    ~~~~~~~~~~~~~~|_________|/
+""",
+        },
+    },
+    "pa": {
+        "praia": {
+            "plano": r"""
+    ver-o-peso    ▲    ▲     ___________
+    ═╦═   ═╦═    /█\  /█\   /  ISOPOR  /|
+    ║barraca║   /___\/___\ /__________/ |
+   ~~~~~~~~~~~~~~~~~~~~~~~~|░░░░░░░░░| /
+   ~~ baía do guajará ~~~~~|_________|/
+""",
+            "venda": r"""
+    ═╦═   ═╦═    ▲    ▲    o/  ___________
+    ║barraca║   /█\  /█\   /| /  ISOPOR  /|
+   ~~~~~~~~~~~ /___\/___\ / \/__________/ |
+   ~~~~~~~~~~~~~~~~~~~~~~~~|▓▓▓▓▓▓▓▓▓| /  "égua, um chup-chup!"
+   ~~~~~~~~~~~~~~~~~~~~~~~~|_________|/
+""",
+        },
+    },
 }
 
 _CEU: dict[WeatherKind, tuple[str, str]] = {
@@ -150,7 +213,10 @@ _COR_PONTO = {
     "escola": "cyan", "carrinho": "magenta",
 }
 _COR_PONTO_REGIAO = {
-    "df": {"praia": "grey78"},   # concreto da Esplanada, nao sol de praia
+    "df": {"praia": "grey78"},        # concreto da Esplanada, nao sol de praia
+    "mg": {"praia": "green3"},        # verde da lagoa e do gramado ao redor
+    "rs": {"praia": "orange1"},       # por do sol na Orla, marca registrada
+    "pa": {"praia": "dark_orange3"},  # barracas e madeira do Ver-o-Peso
 }
 
 

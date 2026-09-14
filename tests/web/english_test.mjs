@@ -56,17 +56,19 @@ const titulos = () => $$(".cartao h2, .hero-texto h1").map(h => h.textContent);
 
 console.log("=== 1. o seletor existe e comeca em portugues ===");
 api.telaRegioes();
-const chips = $$(".lang-chip");
+// .lang-chip tambem inclui o link do REPL de Python (easter egg), que nao
+// e um idioma -- so os idiomas de verdade tem o data-idioma marcado com pt/en.
+const chips = $$(".lang-chip:not(.repl-link)");
 console.log("  chips:", chips.map(c => c.textContent).join(" / "),
             "| ativo:", $(".lang-chip.ativa")?.textContent);
 if (chips.length !== 2) falhas.push("deviam ser 2 idiomas no seletor");
-if ($(".lang-chip.ativa")?.textContent !== "Português")
+if (!$(".lang-chip.ativa")?.textContent.includes("Português"))
   falhas.push("o padrao devia ser portugues");
 if (!titulos().some(t => t.includes("Escolha uma cidade")))
   falhas.push("titulo pt errado");
 
 console.log("\n=== 2. clicar English troca a tela inteira ===");
-chips.find(c => c.textContent === "English").click();
+chips.find(c => c.textContent.includes("English")).click();
 console.log("  titulo:", titulos()[0]);
 console.log("  url:", window.location.search || "(sem query)");
 if (api.getLang() !== "en") falhas.push("lang nao virou en");

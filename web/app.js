@@ -46,10 +46,50 @@ function salvarConquistas(lista) {
     localStorage.setItem("dindin-conquistas", JSON.stringify(lista));
   } catch { /* modo privado/sem quota: joga sem guardar */ }
 }
+
+// Progresso por regiao: { [regiao]: { dia, caixa, estado } }. Antes so a
+// vitoria ficava registrada (o "estado" morria ao trocar de regiao) -- um
+// jogador que comecasse SP e fosse tentar CE perdia SP de vez, mesmo sem
+// ter perdido o jogo la. Agora cada regiao guarda seu proprio "de onde
+// parei", atualizado a cada dia jogado, independente de qual esta ativa.
+let progresso = carregarProgresso();
+
+function carregarProgresso() {
+  try {
+    const cru = JSON.parse(localStorage.getItem("dindin-progresso") ?? "{}");
+    return (cru && typeof cru === "object" && !Array.isArray(cru)) ? cru : {};
+  } catch {
+    return {};
+  }
+}
+
+function salvarProgresso(mapa) {
+  progresso = mapa;
+  try {
+    localStorage.setItem("dindin-progresso", JSON.stringify(mapa));
+  } catch { /* modo privado/sem quota: joga sem guardar */ }
+}
+
+/** Grava o estado atual como o progresso da sua regiao. Chamado apos cada
+ * dia jogado -- e a unica escrita automatica, sem depender do jogador
+ * lembrar de clicar em salvar. */
+function registrarProgresso(estadoAtual) {
+  const mapa = { ...progresso };
+  mapa[estadoAtual.regiao] = {
+    dia: estadoAtual.dia, caixa: estadoAtual.caixa, estado: estadoAtual,
+  };
+  salvarProgresso(mapa);
+}
+
+/** Tira uma regiao do mapa de progresso: a jornada acabou (venceu ou
+ * faliu), nao faz sentido "continuar" um jogo que ja terminou. */
+function limparProgresso(regiao) {
+  const mapa = { ...progresso };
+  delete mapa[regiao];
+  salvarProgresso(mapa);
+}
 // null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
 let gelo = null;
-// Redesenha o texto do overlay de arrastar-e-soltar quando o idioma muda.
-let atualizarDropOverlay = () => {};
 // Refaz a tela atual depois de trocar o tema. So telaDia/telaRelatorio tem
 // cabecalho (com o botao de tema), entao so elas precisam se registrar aqui.
 let redesenharTelaAtual = () => {};
@@ -183,6 +223,8 @@ function restaurarDeDump(cru) {
     return false;
   }
 
+  const keys = ["dindin-tema", "dindin-conquistas", "dindin-progresso"];
+  keys.forEach(k => localStorage.removeItem(k));
   if (dump.localStorage) {
     Object.entries(dump.localStorage).forEach(([k, v]) => {
       if (k.startsWith("dindin-") && typeof v === "string") localStorage.setItem(k, v);
@@ -191,6 +233,7 @@ function restaurarDeDump(cru) {
   tema = localStorage.getItem("dindin-tema") === "claro" ? "claro" : "escuro";
   document.documentElement.dataset.tema = tema;
   conquistas = carregarConquistas();
+  progresso = carregarProgresso();
   if (dump.lang === "pt" || dump.lang === "en") lang = dump.lang;
 
   estado = restaurado;
@@ -209,14 +252,20 @@ function restaurarDeDump(cru) {
 
 function setupDragDrop() {
   const overlay = el("div", "drop-overlay");
-  const caixa = el("div", "drop-box", t("jornada.instrucao"));
-  overlay.append(caixa);
-  // O texto vive no i18n, entao precisa ser redesenhado quando o idioma muda.
-  atualizarDropOverlay = () => { caixa.textContent = t("jornada.instrucao"); };
+  const box = el("div", "drop-box");
+  overlay.append(box);
   overlay.style.display = "none";
   document.body.append(overlay);
   let dragCounter = 0;
-  const showOverlay = () => { dragCounter++; overlay.style.display = "flex"; };
+  // Texto so e montado ao mostrar: setupDragDrop roda no boot, antes de
+  // telaRegioes() carregar o catalogo -- e t() sem catalogo devolve so a
+  // chave crua. Na hora que o jogador arrasta um arquivo de verdade, o
+  // catalogo ja foi carregado ha muito tempo.
+  const showOverlay = () => {
+    dragCounter++;
+    box.textContent = t("jornada.instrucao");
+    overlay.style.display = "flex";
+  };
   const hideOverlay = () => { dragCounter = Math.max(0, dragCounter-1); if (dragCounter === 0) overlay.style.display = "none"; };
   document.addEventListener("dragenter", (e) => {
     if (e.dataTransfer.types.includes("Files")) showOverlay();
@@ -241,13 +290,24 @@ function setupDragDrop() {
 
 // ------------------------------------------------------------------ boot
 /* No celular nao existe :hover, e o :focus em <span> e inconsistente no
- * iOS. Um toque no "?" alterna a classe .aberta; tocar fora fecha. */
+ * iOS. Um toque no "?" (ou no "⋯" do cabecalho) alterna a classe .aberta;
+ * tocar fora fecha. Mesmo padrao pros dois -- so muda o seletor. */
 document.addEventListener("click", (e) => {
-  const alvo = e.target.closest?.(".ajuda");
+  const alvoAjuda = e.target.closest?.(".ajuda");
   for (const a of document.querySelectorAll(".ajuda.aberta")) {
-    if (a !== alvo) a.classList.remove("aberta");
+    if (a !== alvoAjuda) a.classList.remove("aberta");
   }
-  if (alvo) { e.preventDefault(); alvo.classList.toggle("aberta"); }
+  if (alvoAjuda) { e.preventDefault(); alvoAjuda.classList.toggle("aberta"); }
+
+  const alvoMenu = e.target.closest?.(".menu-cabecalho");
+  const cliqueNoToggle = e.target.closest?.(".menu-toggle");
+  for (const m of document.querySelectorAll(".menu-cabecalho.aberto")) {
+    if (m !== alvoMenu) m.classList.remove("aberto");
+  }
+  if (cliqueNoToggle) cliqueNoToggle.closest(".menu-cabecalho")?.classList.toggle("aberto");
+  else if (alvoMenu && e.target.closest(".menu-lista button")) {
+    alvoMenu.classList.remove("aberto");   // fecha ao escolher uma opcao
+  }
 });
 
 async function boot() {
@@ -279,22 +339,27 @@ function telaRegioes() {
 
   // O seletor de idioma + tema: controles fixos no topo da tela.
   const picker = el("div", "lang-picker");
-  for (const [codigo, rotulo] of [["pt", "Português"], ["en", "English"]]) {
+  const replLink = el("button", "lang-chip repl-link", "🐍");
+  replLink.title = t("repl.menu_link");
+  replLink.setAttribute("aria-label", t("repl.menu_link"));
+  replLink.onclick = telaRepl;
+  picker.append(replLink);
+  for (const [codigo, bandeira, rotulo] of [["pt", "🇧🇷", "Português"], ["en", "🇺🇸", "English"]]) {
     const chip = el("button", "lang-chip" + (lang === codigo ? " ativa" : ""),
-                    rotulo);
+                    `${bandeira} ${rotulo}`);
     chip.onclick = () => {
       if (lang === codigo) return;
       lang = codigo;
       const url = new URLSearchParams(location.search);
       if (lang === "en") url.set("lang", "en"); else url.delete("lang");
       history.replaceState({}, "", url.size ? `?${url}` : location.pathname);
-      atualizarDropOverlay();
       telaRegioes();
     };
     picker.append(chip);
   }
   picker.append(botaoTema());
   const carregarBtn = el("button", "backup-btn secundaria", t("jornada.carregar"));
+  carregarBtn.title = t("jornada.ajuda");
   carregarBtn.onclick = () => {
     const input = el("input");
     input.type = "file";
@@ -348,14 +413,27 @@ function telaRegioes() {
          </svg><span>${t("campanha.vencida")}</span>`;
       cena.append(selo);
     }
+    const emAndamento = !r.vencida ? progresso[r.key] : null;
+    // Capital repete o nome em RJ/SP (a "regiao" e a propria capital) --
+    // nesses casos so o gentilico ja diz tudo, sem redundancia na tela.
+    const uf = r.capital && r.capital !== r.nome
+      ? `${r.nome} · ${r.capital} · ${r.gentilico}`
+      : `${r.nome} · ${r.gentilico}`;
     const corpo = el("div", "corpo");
     corpo.innerHTML =
       `<div class="produto">${r.produto}</div>
-       <div class="uf">${r.nome} · ${r.gentilico}</div>
+       <div class="uf">${uf}</div>
        <div class="giria">"${r.giria.join('", "')}"</div>
-       <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>`;
+       <div class="favs">${t("regiao.sai_muito")}: ${r.favoritos.map((f) => f.nome).join(", ")}</div>` +
+      (emAndamento
+        ? `<div class="progresso-regiao">${t("regiao.progresso",
+            { dia: emAndamento.dia, caixa: money(emAndamento.caixa) })}</div>`
+        : "");
     b.append(cena, corpo);
-    b.onclick = () => comecar(r.key);
+    // Regiao com jornada salva retoma de onde parou; sem progresso (ou ja
+    // vencida) comeca um jogo novo -- vencer limpa o progresso, entao uma
+    // regiao vencida sempre volta a comecar do zero se jogada de novo.
+    b.onclick = () => emAndamento ? continuarJornada(r.key) : comecar(r.key);
     grade.append(b);
   }
   app.append(grade);
@@ -371,6 +449,199 @@ function comecar(regiao) {
   history.replaceState({}, "",
     `?r=${regiao}&seed=${seed}${lang === "en" ? "&lang=en" : ""}`);
   telaDia();
+}
+
+/** Retoma uma jornada salva automaticamente (dindin-progresso), em vez de
+ * comecar()/novoJogo() do zero. Mesma bridge de validacao do restore por
+ * arquivo -- se o progresso salvo estiver corrompido, cai pra comecar(). */
+function continuarJornada(regiao) {
+  const salvo = progresso[regiao];
+  try {
+    estado = eng.restaurarEstado(salvo.estado);
+  } catch {
+    comecar(regiao);
+    return;
+  }
+  catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
+  history.replaceState({}, "",
+    `?r=${estado.regiao}&seed=${estado.seed}${lang === "en" ? "&lang=en" : ""}`);
+  telaDia();
+}
+
+// -------------------------------------------------------------------- repl
+/* Console de Python de aprendizado. Roda no MESMO interprete Pyodide do
+ * jogo, mas num namespace isolado (eng.rodarRepl) -- nao mexe no estado da
+ * partida nem precisa dele. Existe pra dar ao curioso um lugar pra digitar
+ * "2 + 2" e ver Python de verdade rodando no navegador, sem instalar nada. */
+const REPL_EXEMPLOS = ["2 + 2", 'nome = "Ana"', "print(nome)",
+  "for i in range(3):\n    print(i)", "import this"];
+let replHistorico = [];   // linhas ja rodadas, mais recente por ultimo
+let replIndiceHist = null; // posicao ao navegar com as setas; null = fora do historico
+let replRascunho = "";     // o que o aluno estava digitando antes de apertar seta
+
+function telaRepl() {
+  redesenharTelaAtual = telaRepl;
+  const app = $("#app");
+  app.innerHTML = "";
+
+  const topo = el("div", "lang-picker");
+  const voltar = el("button", "lang-chip", `← ${t("ui.voltar")}`);
+  voltar.onclick = telaRegioes;
+  topo.append(voltar);
+  topo.append(botaoTema());
+  app.append(topo);
+
+  const c = el("div", "cartao repl-cartao");
+  c.append(el("h2", null, t("repl.titulo")));
+  c.append(el("p", "sub", t("repl.subtitulo")));
+
+  const tela = el("div", "repl-tela");
+  tela.id = "repl-tela";
+  c.append(tela);
+
+  const linha = el("div", "repl-linha");
+  const prompt = el("span", "repl-prompt", ">>>");
+  const campo = el("textarea", "repl-input");
+  campo.id = "repl-input";
+  campo.placeholder = t("repl.placeholder");
+  campo.rows = 1;
+  campo.spellcheck = false;
+  campo.autocapitalize = "off";
+  campo.autocomplete = "off";
+  const rodar = el("button", "principal", t("repl.rodar"));
+  linha.append(prompt, campo, rodar);
+  c.append(linha);
+
+  const acoes = el("div", "repl-acoes");
+  const limpar = el("button", "secundaria", t("repl.limpar"));
+  const reiniciar = el("button", "secundaria", t("repl.reiniciar"));
+  acoes.append(limpar, reiniciar);
+  c.append(acoes);
+
+  const ex = el("div", "repl-exemplos");
+  ex.append(el("span", "rotulo", t("repl.exemplos_titulo")));
+  for (const codigo of REPL_EXEMPLOS) {
+    const chip = el("button", "repl-exemplo", codigo.split("\n")[0]);
+    chip.onclick = () => { campo.value = codigo; ajustarAlturaRepl(campo); campo.focus(); };
+    ex.append(chip);
+  }
+  c.append(ex);
+
+  app.append(c);
+
+  const executar = () => {
+    const codigo = campo.value;
+    if (!codigo.trim()) return;
+    replHistorico.push(codigo);
+    replIndiceHist = null;
+    replRascunho = "";
+    const { saida, erro } = eng.rodarRepl(codigo);
+    replEcoar(codigo, saida, erro);
+    campo.value = "";
+    ajustarAlturaRepl(campo);
+    rolarAteCampoRepl();
+  };
+
+  campo.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      executar();
+      return;
+    }
+    if (e.key === "ArrowUp" && !codigoTemQuebraDeLinha(campo)) {
+      if (!replHistorico.length) return;
+      e.preventDefault();
+      if (replIndiceHist === null) { replRascunho = campo.value; replIndiceHist = replHistorico.length; }
+      replIndiceHist = Math.max(0, replIndiceHist - 1);
+      campo.value = replHistorico[replIndiceHist];
+      ajustarAlturaRepl(campo);
+    } else if (e.key === "ArrowDown" && !codigoTemQuebraDeLinha(campo)) {
+      if (replIndiceHist === null) return;
+      e.preventDefault();
+      replIndiceHist += 1;
+      if (replIndiceHist >= replHistorico.length) {
+        replIndiceHist = null;
+        campo.value = replRascunho;
+      } else {
+        campo.value = replHistorico[replIndiceHist];
+      }
+      ajustarAlturaRepl(campo);
+    }
+  });
+  campo.addEventListener("input", () => ajustarAlturaRepl(campo));
+  rodar.onclick = executar;
+  limpar.onclick = () => { tela.innerHTML = ""; };
+  reiniciar.onclick = () => {
+    eng.reiniciarRepl();
+    tela.innerHTML = "";
+    replLinha(tela, "aviso", t("repl.reiniciado"));
+  };
+
+  const versao = eng.versaoPython();
+  replLinha(tela, "boas-vindas",
+    t("repl.bem_vindo", { versao, exemplo: `<code>${REPL_EXEMPLOS[0]}</code>` }));
+  const dica = el("div", "repl-dica");
+  dica.textContent = t("repl.dica_setas");
+  tela.append(dica);
+  campo.focus();
+}
+
+/** true se o textarea tem mais de uma linha -- af, aí as setas devem mover
+ * o cursor dentro do texto, nao navegar o historico. */
+function codigoTemQuebraDeLinha(campo) {
+  return campo.value.includes("\n");
+}
+
+function ajustarAlturaRepl(campo) {
+  campo.style.height = "auto";
+  campo.style.height = campo.scrollHeight + "px";
+}
+
+function replLinha(tela, cls, html) {
+  const d = el("div", `repl-msg ${cls}`);
+  d.innerHTML = html;
+  tela.append(d);
+  rolarAteCampoRepl();
+  return d;
+}
+
+/** A tela cresce com a pagina (sem scroll proprio) -- entao quem "rola" e a
+ * pagina, ate o campo de digitar ficar visivel. E ele que importa: e onde
+ * o proximo comando vai ser digitado, nao o topo da saida que acabou de
+ * imprimir (isso deixaria o campo fora da tela com uma saida longa, tipo
+ * o Zen do Python de "import this"). */
+function rolarAteCampoRepl() {
+  $("#repl-input")?.scrollIntoView({ block: "end", behavior: "smooth" });
+}
+
+/** Registra um comando + sua saida na tela, tipo scrollback de terminal. */
+function replEcoar(codigo, saida, erro) {
+  const tela = $("#repl-tela");
+  if (!tela) return;
+  const bloco = el("div", "repl-bloco");
+  const linhas = codigo.split("\n");
+  bloco.innerHTML = linhas
+    .map((l, i) => `<div class="repl-echo"><span class="repl-prompt">${
+      i === 0 ? "&gt;&gt;&gt;" : "..."}</span><code>${escaparHtml(l)}</code></div>`)
+    .join("");
+  if (saida) {
+    const out = el("pre", "repl-saida");
+    out.textContent = saida.replace(/\n$/, "");
+    bloco.append(out);
+  }
+  if (erro) {
+    const out = el("pre", "repl-erro");
+    out.textContent = erro;
+    bloco.append(out);
+  }
+  tela.append(bloco);
+  rolarAteCampoRepl();
+}
+
+function escaparHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 function cabecalho(clima) {
@@ -390,15 +661,36 @@ function cabecalho(clima) {
   s.append(dClima);
   add(t("ui.dia"), estado.dia);
   add(t("ui.caixa"), money(estado.caixa));
-  add(t("ui.fama"), Math.round(estado.reputacao));
   add(t("ui.ponto"), t(`local.${estado.local_atual}`));
   h.append(s);
-  h.append(botaoTema());
-  const salvarBtn = el("button", "backup-btn", "💾");
-  salvarBtn.title = t("jornada.salvar");
-  salvarBtn.onclick = () => dumpJornada(estado);
-  h.append(salvarBtn);
+  h.append(menuCabecalho());
   return h;
+}
+
+/** Menu de "mais opcoes" do jogo: tema, salvar e trocar de regiao. Eram tres
+ * botoes soltos no cabecalho, cada um competindo com os stats por atencao;
+ * juntos aqui porque sao todos "acoes sobre a sessao", nao dados do dia. */
+function menuCabecalho() {
+  const wrap = el("div", "menu-cabecalho");
+  const toggle = el("button", "menu-toggle", "⋯");
+  toggle.title = t("ui.menu");
+  toggle.setAttribute("aria-label", t("ui.menu"));
+  wrap.append(toggle);
+
+  const lista = el("div", "menu-lista");
+  const item = (icone, texto, onclick, title) => {
+    const b = el("button", null, `${icone} ${texto}`);
+    if (title) b.title = title;
+    b.onclick = onclick;
+    lista.append(b);
+    return b;
+  };
+  item(tema === "claro" ? "🌙" : "🏳️", tema === "claro" ? t("ui.modo_noite") : t("ui.modo_bandeira"),
+       alternarTema);
+  item("💾", t("jornada.baixar"), () => dumpJornada(estado), t("jornada.salvar"));
+  item("←", t("ui.trocar_regiao"), telaRegioes);
+  wrap.append(lista);
+  return wrap;
 }
 
 /** Alterna entre o tema escuro (padrao) e o "modo bandeira" (claro). */
@@ -490,11 +782,15 @@ function telaDia() {
   // --- gelo (depende do quanto foi produzido)
   const gl = cartaoGelo();
   if (gl) coluna.append(gl);
-  // Monta a tabela ja: esperar timeout deixava a cozinha vazia num primeiro frame.
-  recarregarCozinha();
 
   layout.append(sidebarDia(local0));
+  // So agora o layout esta na arvore do documento: recarregarCozinha() e
+  // montarPreco() procuram os elementos por #id via document.querySelector,
+  // que so acha nos ja anexados. Chamar antes do append (como era) deixava
+  // o preco vazio no primeiro frame -- e um "vender" imediato ia sem preco
+  // pra nenhum sabor, sumindo com a venda inteira do relatorio.
   app.append(layout);
+  recarregarCozinha();
 }
 
 /** Tira de status: onde a progressao ja libera vender, ponto atual em destaque. */
@@ -989,6 +1285,7 @@ function rodarDia() {
   const plano = { compras: carrinho, producao, precos, gelo: sacos };
   const out = eng.jogarDia(estado, plano);
   estado = out.estado;
+  if (!estado.encerrado) registrarProgresso(estado);
   telaRelatorio(out.resultado, out.desbloqueou);
 }
 
@@ -1024,6 +1321,12 @@ function telaRelatorio(r, desbloqueou) {
   tile(t("rel.custos"), money(r.custo_insumos + r.custo_fixo));
   tile(t("rel.lucro"), money(r.lucro), r.lucro >= 0 ? "lucro" : "prejuizo");
   tile(t("ui.caixa"), money(r.caixa_final));
+  // Fama e efeito acumulado de varios dias, nao um numero pra vigiar a
+  // cada tela -- por isso mora aqui como o resultado do dia (a variacao),
+  // nao no cabecalho fixo junto de caixa/dia/ponto.
+  const deltaFama = Math.round(r.reputacao_delta ?? 0);
+  tile(t("ui.fama"), `${deltaFama > 0 ? "+" : ""}${deltaFama}`,
+       deltaFama > 0 ? "lucro" : deltaFama < 0 ? "prejuizo" : "");
   app.append(tiles);
 
   const layout = el("div", "rel-layout");
@@ -1158,6 +1461,9 @@ const falaDe = (tag) => {
 };
 
 function telaFim() {
+  // Ganhou ou faliu, a jornada dessa regiao acabou -- nao ha o que
+  // "continuar" mais, entao sai do mapa de progresso em andamento.
+  limparProgresso(estado.regiao);
   const app = $("#app");
   app.innerHTML = "";
   const c = el("div", "cartao");

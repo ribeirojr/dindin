@@ -26,4 +26,8 @@ OVERRIDE: dict[str, str] = {
     "cap.vitoria": "Cê conseguiu, sô! Trem bão demais!",
     "evento.festa_junina_mg": "Festa junina na praça, sô. Bão demais.",
     "evento.quermesse": "Quermesse na igreja, o povo todo lá.",
+    # BH e mineira do interior: sem praia. O capitulo 3 vira a Lagoa da Pampulha.
+    "local.praia": "Lagoa da Pampulha",
+    "dica.praia": "Fim de semana a Pampulha lota de gente correndo e "
+                  "namorando — mas segunda de manhã só sobra pombo.",
 }

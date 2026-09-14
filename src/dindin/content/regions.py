@@ -9,7 +9,7 @@ _INVERNO_NORDESTE = {W.ESCALDANTE: 0.10, W.QUENTE: 0.34, W.ABAFADO: 0.20,
                      W.NUBLADO: 0.20, W.CHUVA: 0.14, W.TEMPORAL: 0.02, W.FRIO: 0.00}
 
 CEARA = Region(
-    key="ce", nome="Ceará", gentilico="cearense",
+    key="ce", nome="Ceará", gentilico="cearense", capital="Fortaleza",
     clima={Season.VERAO: _VERAO_NORDESTE, Season.OUTONO: _VERAO_NORDESTE,
            Season.INVERNO: _INVERNO_NORDESTE, Season.PRIMAVERA: _VERAO_NORDESTE},
     base_temp_c=(29.0, 35.0),
@@ -20,7 +20,7 @@ CEARA = Region(
 )
 
 RIO = Region(
-    key="rj", nome="Rio de Janeiro", gentilico="carioca",
+    key="rj", nome="Rio de Janeiro", gentilico="carioca", capital="Rio de Janeiro",
     clima={Season.VERAO: {W.ESCALDANTE: 0.26, W.QUENTE: 0.32, W.ABAFADO: 0.20,
                           W.NUBLADO: 0.09, W.CHUVA: 0.08, W.TEMPORAL: 0.05, W.FRIO: 0.00},
            Season.OUTONO: {W.ESCALDANTE: 0.12, W.QUENTE: 0.30, W.ABAFADO: 0.20,
@@ -37,7 +37,7 @@ RIO = Region(
 )
 
 MINAS = Region(
-    key="mg", nome="Minas Gerais", gentilico="mineiro",
+    key="mg", nome="Minas Gerais", gentilico="mineiro", capital="Belo Horizonte",
     clima={Season.VERAO: {W.ESCALDANTE: 0.12, W.QUENTE: 0.34, W.ABAFADO: 0.16,
                           W.NUBLADO: 0.20, W.CHUVA: 0.14, W.TEMPORAL: 0.04, W.FRIO: 0.00},
            Season.OUTONO: {W.ESCALDANTE: 0.05, W.QUENTE: 0.26, W.ABAFADO: 0.12,
@@ -54,7 +54,7 @@ MINAS = Region(
 )
 
 SAO_PAULO = Region(
-    key="sp", nome="São Paulo", gentilico="paulista",
+    key="sp", nome="São Paulo", gentilico="paulista", capital="São Paulo",
     clima={Season.VERAO: {W.ESCALDANTE: 0.16, W.QUENTE: 0.30, W.ABAFADO: 0.18,
                           W.NUBLADO: 0.16, W.CHUVA: 0.14, W.TEMPORAL: 0.06, W.FRIO: 0.00},
            Season.OUTONO: {W.ESCALDANTE: 0.06, W.QUENTE: 0.24, W.ABAFADO: 0.14,
@@ -71,7 +71,7 @@ SAO_PAULO = Region(
 )
 
 RIO_GRANDE = Region(
-    key="rs", nome="Rio Grande do Sul", gentilico="gaúcho",
+    key="rs", nome="Rio Grande do Sul", gentilico="gaúcho", capital="Porto Alegre",
     clima={Season.VERAO: {W.ESCALDANTE: 0.22, W.QUENTE: 0.34, W.ABAFADO: 0.16,
                           W.NUBLADO: 0.14, W.CHUVA: 0.10, W.TEMPORAL: 0.04, W.FRIO: 0.00},
            Season.OUTONO: {W.ESCALDANTE: 0.04, W.QUENTE: 0.20, W.ABAFADO: 0.10,
@@ -88,7 +88,7 @@ RIO_GRANDE = Region(
 )
 
 PARA = Region(
-    key="pa", nome="Pará", gentilico="paraense",
+    key="pa", nome="Pará", gentilico="paraense", capital="Belém",
     clima={Season.VERAO: {W.ESCALDANTE: 0.24, W.QUENTE: 0.30, W.ABAFADO: 0.22,
                           W.NUBLADO: 0.08, W.CHUVA: 0.14, W.TEMPORAL: 0.02, W.FRIO: 0.00},
            Season.OUTONO: {W.ESCALDANTE: 0.18, W.QUENTE: 0.26, W.ABAFADO: 0.22,
@@ -105,7 +105,7 @@ PARA = Region(
 )
 
 BRASILIA = Region(
-    key="df", nome="Distrito Federal", gentilico="brasiliense",
+    key="df", nome="Distrito Federal", gentilico="brasiliense", capital="Brasília",
     # Cerrado: verao chuvoso (out-abr) e um inverno seco de rachar --
     # meses a fio sem chuva, umidade baixissima, calor seco o dia inteiro.
     clima={Season.VERAO: {W.ESCALDANTE: 0.14, W.QUENTE: 0.32, W.ABAFADO: 0.16,

@@ -32,6 +32,22 @@ BASE: dict[str, str] = {
     "ui.meta": "Meta do capítulo",
     "ui.ponto": "Ponto de venda",
     "ui.clima_amanha": "Previsão de hoje",
+    "ui.menu": "Mais opções",
+    "ui.trocar_regiao": "Trocar de região",
+
+    # --- repl de python ---
+    "repl.menu_link": "🐍 Aprenda Python",
+    "repl.titulo": "Python no navegador",
+    "repl.subtitulo": "Digite um comando Python e aperte Enter para rodar. "
+                       "É o mesmo Python que roda o jogo — de verdade, sem servidor.",
+    "repl.placeholder": "digite aqui e aperte Enter...",
+    "repl.rodar": "Rodar",
+    "repl.limpar": "Limpar",
+    "repl.reiniciar": "Reiniciar",
+    "repl.reiniciado": "Python reiniciado. Todas as variáveis foram apagadas.",
+    "repl.bem_vindo": "Python {versao} pronto. Digite algo como {exemplo} e aperte Enter.",
+    "repl.dica_setas": "Dica: use ↑ e ↓ para repetir comandos anteriores.",
+    "repl.exemplos_titulo": "Exemplos pra começar",
 
     # --- feira ---
     "feira.titulo": "Feira",
@@ -169,6 +185,7 @@ BASE: dict[str, str] = {
     "regiao.subtitulo": "O doce muda de nome em cada estado — e o clima, "
                         "o gosto e o preço mudam junto.",
     "regiao.sai_muito": "Sai muito",
+    "regiao.progresso": "Dia {dia} · {caixa}",
     "ui.escolha_regiao": "Escolha uma cidade para jogar!",
     "ui.fama": "Fama",
     "ui.no_caixa": "No caixa",
@@ -251,7 +268,7 @@ BASE: dict[str, str] = {
     # --- jornada / backup (salva a viagem do isopor) ---
     "jornada.salvar": "Bora salvar essa jornada arretada, ma broca? Isopor cheio de dindin bom, égua!",
     "jornada.baixar": "Baixar o save do dia",
-    "jornada.carregar": "Carregar jornada salva",
+    "jornada.carregar": "Carregar jornada",
     "jornada.instrucao": "Arraste o dindin-diaXX-ABCDEF.json aqui (ou clique). Salva no fim de cada dia após vender — continua de onde parou sem derreter o lucro.",
     "jornada.toast_salvo": "Jornada guardada! O isopor tá seguro na memória, vixe.",
     "jornada.toast_carregado": "Jornada restaurada. Bora pro próximo dia, meu consagrado!",

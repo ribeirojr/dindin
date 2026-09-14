@@ -41,13 +41,22 @@ def test_produto_regional_e_o_mesmo_nas_duas_linguas(regiao):
     assert en.t("produto.plur") == pt.t("produto.plur")
 
 
+#: Capitais sem praia de verdade ganham um capitulo 3 diferente (a chave
+#: local.praia continua a mesma -- so o texto muda por regiao).
+SEM_PRAIA = {
+    "df": "Esplanada dos Ministérios",  # Brasilia: sem litoral, e capital planejada.
+    "mg": "Lagoa da Pampulha",          # Belo Horizonte: mineira do interior, sem praia.
+    "rs": "Orla do Guaíba",             # Porto Alegre: fica no Guaiba (rio/lago), nao no litoral.
+    "pa": "Ver-o-Peso",                 # Belem: Baia do Guajara e estuario de rio, nao litoral aberto.
+}
+
+
 @pytest.mark.parametrize("regiao", REGIOES_I18N)
 def test_interface_sai_em_ingles(regiao):
     en = Translator(regiao, "en")
     assert en.t("ui.novo_jogo") == "New game"
     assert en.t("feira.titulo") == "Market"
-    # DF nao tem praia: o capitulo 3 la e a Esplanada dos Ministerios.
-    esperado_praia = "Esplanada dos Ministérios" if regiao == "df" else "Beach"
+    esperado_praia = SEM_PRAIA.get(regiao, "Beach")
     assert en.t("local.praia") == esperado_praia
     assert not en.t("rel.sellout", perdidos=3).startswith("⟨missing:")
 

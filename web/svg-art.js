@@ -727,8 +727,13 @@ export const CENA_FILA = {
 </svg>`,
 };
 
-// Excecoes por regiao: mesmo capitulo, outro lugar. DF nao tem praia --
-// o capitulo 3 la e a Esplanada dos Ministerios (ver local.praia no i18n).
+// Excecoes por regiao: mesmo capitulo, outro lugar. Nem toda capital tem
+// praia de mar -- cada uma dessas ganha uma cena propria (ver local.praia
+// no i18n pra cada override de nome/texto):
+//   df: Esplanada dos Ministerios (sem litoral, capital planejada)
+//   mg: Lagoa da Pampulha (Belo Horizonte e mineira do interior)
+//   rs: Orla do Guaiba (Porto Alegre fica no rio/lago, nao no litoral)
+//   pa: Ver-o-Peso (Belem fica na Baia do Guajara, estuario de rio)
 export const CENA_LOCAL_REGIAO = {
   df: {
     praia: {
@@ -783,6 +788,102 @@ export const CENA_LOCAL_REGIAO = {
   <rect x="118" y="60" width="34" height="28" rx="4" fill="#ffffff"></rect>
   <rect x="115" y="54" width="40" height="7" rx="3" fill="#002776"></rect>
   <ellipse cx="135" cy="118" rx="26" ry="5" fill="#d9c69c"></ellipse>
+</svg>`,
+    },
+  },
+  mg: {
+    praia: {
+      escuro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A Lagoa da Pampulha: igrejinha de curvas brancas na beira do lago, isopor na calcada">
+  <rect width="160" height="128" fill="#1b2233"></rect>
+  <circle cx="126" cy="28" r="17" fill="#e8c07a" opacity="0.85"></circle>
+  <rect y="74" width="160" height="14" fill="#101a28"></rect>
+  <path d="M6,80 q9,-5 18,0 t18,0 t18,0 t18,0 t18,0" stroke="#2c3a52" stroke-width="2" fill="none"></path>
+  <path d="M14,74 a20,20 0 0 1 40,0 Z" fill="#e9e0c4"></path>
+  <rect x="32" y="48" width="4" height="9" fill="#c9bf9c"></rect>
+  <rect y="88" width="160" height="40" fill="#233428"></rect>
+  <rect x="90" y="60" width="40" height="28" rx="4" fill="#1f2433"></rect>
+  <rect x="87" y="54" width="46" height="7" rx="3" fill="#2d3246"></rect>
+  <ellipse cx="110" cy="118" rx="28" ry="5" fill="#182419"></ellipse>
+</svg>`,
+      claro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A Lagoa da Pampulha sob ceu claro: igrejinha branca refletida no lago">
+  <rect width="160" height="128" fill="#a9ddf3"></rect>
+  <circle cx="126" cy="26" r="15" fill="#ffdf00"></circle>
+  <rect y="74" width="160" height="14" fill="#1f9bc4"></rect>
+  <path d="M6,80 q9,-5 18,0 t18,0 t18,0 t18,0 t18,0" stroke="#bfeaf7" stroke-width="2" fill="none"></path>
+  <path d="M14,74 a20,20 0 0 1 40,0 Z" fill="#ffffff"></path>
+  <rect x="32" y="48" width="4" height="9" fill="#dcd4b0"></rect>
+  <rect y="88" width="160" height="40" fill="#7fbf7a"></rect>
+  <rect x="90" y="60" width="40" height="28" rx="4" fill="#ffffff"></rect>
+  <rect x="87" y="54" width="46" height="7" rx="3" fill="#002776"></rect>
+  <ellipse cx="110" cy="118" rx="28" ry="5" fill="#5fa25c"></ellipse>
+</svg>`,
+    },
+  },
+  rs: {
+    praia: {
+      escuro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Orla do Guaiba ao entardecer: sol baixo sobre o rio, isopor na calcada">
+  <rect width="160" height="128" fill="#241c2e"></rect>
+  <circle cx="34" cy="60" r="20" fill="#e0813f" opacity="0.9"></circle>
+  <rect y="66" width="160" height="22" fill="#2a2038"></rect>
+  <path d="M6,74 q9,-5 18,0 t18,0 M96,80 q9,-5 18,0 t18,0" stroke="#4a3a58" stroke-width="2" fill="none"></path>
+  <rect y="88" width="160" height="40" fill="#262a3b"></rect>
+  <path d="M0,90 h160" stroke="#3c3450" stroke-width="3"></path>
+  <rect x="106" y="82" width="3" height="8" fill="#3c3450"></rect>
+  <rect x="136" y="82" width="3" height="8" fill="#3c3450"></rect>
+  <rect x="86" y="92" width="40" height="22" rx="4" fill="#1f2433"></rect>
+  <rect x="83" y="86" width="46" height="7" rx="3" fill="#2d3246"></rect>
+  <ellipse cx="106" cy="118" rx="30" ry="5" fill="#191c28"></ellipse>
+</svg>`,
+      claro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Orla do Guaiba ao entardecer sob ceu claro: sol baixo sobre o rio">
+  <rect width="160" height="128" fill="#f3c98e"></rect>
+  <circle cx="34" cy="60" r="18" fill="#ffdf00"></circle>
+  <rect y="66" width="160" height="22" fill="#e0a25c"></rect>
+  <path d="M6,74 q9,-5 18,0 t18,0 M96,80 q9,-5 18,0 t18,0" stroke="#f7e0b8" stroke-width="2" fill="none"></path>
+  <rect y="88" width="160" height="40" fill="#f0e3c0"></rect>
+  <path d="M0,90 h160" stroke="#c2703f" stroke-width="3"></path>
+  <rect x="106" y="82" width="3" height="8" fill="#c2703f"></rect>
+  <rect x="136" y="82" width="3" height="8" fill="#c2703f"></rect>
+  <rect x="86" y="92" width="40" height="22" rx="4" fill="#ffffff"></rect>
+  <rect x="83" y="86" width="46" height="7" rx="3" fill="#002776"></rect>
+  <ellipse cx="106" cy="118" rx="30" ry="5" fill="#d9c69c"></ellipse>
+</svg>`,
+    },
+  },
+  pa: {
+    praia: {
+      escuro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Ver-o-Peso ao amanhecer: barracas de feira na beira da baia, isopor no chao">
+  <rect width="160" height="128" fill="#1b2233"></rect>
+  <circle cx="126" cy="28" r="17" fill="#e8c07a" opacity="0.85"></circle>
+  <rect y="72" width="160" height="16" fill="#101a28"></rect>
+  <path d="M6,76 q9,-5 18,0 t18,0 M96,80 q9,-5 18,0 t18,0" stroke="#2c3a52" stroke-width="2" fill="none"></path>
+  <path d="M8,58 L24,42 L40,58 Z" fill="#c2703f" opacity="0.9"></path>
+  <rect x="14" y="58" width="20" height="14" fill="#3c4470"></rect>
+  <path d="M44,58 L60,42 L76,58 Z" fill="#e0a25c" opacity="0.9"></path>
+  <rect x="50" y="58" width="20" height="14" fill="#3c4470"></rect>
+  <rect y="88" width="160" height="40" fill="#262a3b"></rect>
+  <rect x="90" y="62" width="40" height="26" rx="4" fill="#1f2433"></rect>
+  <rect x="87" y="56" width="46" height="7" rx="3" fill="#2d3246"></rect>
+  <ellipse cx="110" cy="118" rx="28" ry="5" fill="#191c28"></ellipse>
+</svg>`,
+      claro: `
+<svg viewBox="0 0 160 128" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Ver-o-Peso ao amanhecer sob ceu claro: barracas de feira na beira da baia">
+  <rect width="160" height="128" fill="#a9ddf3"></rect>
+  <circle cx="126" cy="26" r="15" fill="#ffdf00"></circle>
+  <rect y="72" width="160" height="16" fill="#1f9bc4"></rect>
+  <path d="M6,76 q9,-5 18,0 t18,0 M96,80 q9,-5 18,0 t18,0" stroke="#bfeaf7" stroke-width="2" fill="none"></path>
+  <path d="M8,58 L24,42 L40,58 Z" fill="#c2703f"></path>
+  <rect x="14" y="58" width="20" height="14" fill="#f4eeda"></rect>
+  <path d="M44,58 L60,42 L76,58 Z" fill="#e0a25c"></path>
+  <rect x="50" y="58" width="20" height="14" fill="#f4eeda"></rect>
+  <rect y="88" width="160" height="40" fill="#f0e3c0"></rect>
+  <rect x="90" y="62" width="40" height="26" rx="4" fill="#ffffff"></rect>
+  <rect x="87" y="56" width="46" height="7" rx="3" fill="#002776"></rect>
+  <ellipse cx="110" cy="118" rx="28" ry="5" fill="#d9c69c"></ellipse>
 </svg>`,
     },
   },
