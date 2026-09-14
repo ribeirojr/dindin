@@ -11,7 +11,8 @@ const dom = new JSDOM(readFileSync("web/index.html", "utf8"),
   { url: "http://localhost:8765/", pretendToBeVisual: true });
 const { window } = dom;
 for (const k of ["document","HTMLElement","Element","Node","getComputedStyle",
-                 "requestAnimationFrame","cancelAnimationFrame","location","history"]) {
+                 "requestAnimationFrame","cancelAnimationFrame","location","history",
+                 "localStorage"]) {
   try { Object.defineProperty(globalThis, k, { value: window[k], configurable: true, writable: true }); }
   catch { /* read-only no Node 26 */ }
 }
@@ -37,18 +38,21 @@ eng.tempos = { interpretador: 900, modulos: 7, importacao: 40, total: 950 };
 const erros = [];
 window.addEventListener("error", (e) => erros.push(e.message));
 
+const svgArt = await import(new URL("../../web/svg-art.js", import.meta.url).href);
 let src = readFileSync("web/app.js", "utf8")
   .replace('import { DindinEngine } from "./pyodide-bridge.js";', "")
+  .replace('import { CENA_HERO, CENA_RELATORIO, CENA_FILA, cenaLocal, cenaRegiao } from "./svg-art.js";', "")
   .replace("const eng = new DindinEngine();", "")
   .replace(/\nboot\(\);\s*$/,
-    "\nglobalThis.__api = { telaRegioes, getEstado: ()=>estado, getLang: ()=>lang };\n");
-const mod = new Function("eng", "__t", src.replace("tempos = null", "tempos = __t") + "\nreturn globalThis.__api;");
-const api = mod(eng, eng.tempos);
+    "\nglobalThis.__api = { telaRegioes, recarregarCozinha, getEstado: ()=>estado, getLang: ()=>lang };\n");
+const mod = new Function("eng", "__t", "CENA_HERO", "CENA_RELATORIO", "CENA_FILA", "cenaLocal", "cenaRegiao",
+  src.replace("tempos = null", "tempos = __t") + "\nreturn globalThis.__api;");
+const api = mod(eng, eng.tempos, svgArt.CENA_HERO, svgArt.CENA_RELATORIO, svgArt.CENA_FILA, svgArt.cenaLocal, svgArt.cenaRegiao);
 
 const $ = (s) => window.document.querySelector(s);
 const $$ = (s) => [...window.document.querySelectorAll(s)];
 const falhas = [];
-const titulos = () => $$(".cartao h2").map(h => h.textContent);
+const titulos = () => $$(".cartao h2, .hero-texto h1").map(h => h.textContent);
 
 console.log("=== 1. o seletor existe e comeca em portugues ===");
 api.telaRegioes();
@@ -58,7 +62,7 @@ console.log("  chips:", chips.map(c => c.textContent).join(" / "),
 if (chips.length !== 2) falhas.push("deviam ser 2 idiomas no seletor");
 if ($(".lang-chip.ativa")?.textContent !== "Português")
   falhas.push("o padrao devia ser portugues");
-if (!titulos().some(t => t.includes("De onde você é?")))
+if (!titulos().some(t => t.includes("Escolha uma cidade")))
   falhas.push("titulo pt errado");
 
 console.log("\n=== 2. clicar English troca a tela inteira ===");
@@ -66,7 +70,7 @@ chips.find(c => c.textContent === "English").click();
 console.log("  titulo:", titulos()[0]);
 console.log("  url:", window.location.search || "(sem query)");
 if (api.getLang() !== "en") falhas.push("lang nao virou en");
-if (!titulos().some(t => t.includes("Where are you from?")))
+if (!titulos().some(t => t.includes("Pick a city to play at")))
   falhas.push("titulo nao traduziu");
 if (!window.location.search.includes("lang=en"))
   falhas.push("lang=en devia ir pra URL (link compartilhavel)");
@@ -90,7 +94,8 @@ const header = $("header")?.textContent ?? "";
 if (!header.includes("chup-chup")) falhas.push("cabecalho perdeu o nome regional");
 if (!/Cash/.test(header)) falhas.push("cabecalho sem Cash");
 
-// sabores em ingles na cozinha
+// sabores em ingles na cozinha (a tabela so se popula no recarregarCozinha)
+api.recarregarCozinha();
 const cozinha = $$("#corpo-cozinha tr").map(tr => tr.textContent).join(" ");
 console.log("  cozinha:", cozinha.replace(/\s+/g, " ").slice(0, 90));
 if (!cozinha.includes("Coconut")) falhas.push("sabor nao traduziu (Coconut)");

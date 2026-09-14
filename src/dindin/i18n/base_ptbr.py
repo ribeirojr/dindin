@@ -26,7 +26,6 @@ BASE: dict[str, str] = {
     "ui.proximo_dia": "Próximo dia",
     "ui.modo_bandeira": "Modo bandeira",
     "ui.modo_noite": "Modo noite",
-    "ui.escolha_regiao": "De onde você é?",
     "ui.dia": "Dia",
     "ui.caixa": "Caixa",
     "ui.reputacao": "Reputação",

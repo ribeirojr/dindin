@@ -29,6 +29,23 @@ const MODULOS = [
   "i18n/overrides/pa.py", "i18n/overrides/df.py",
 ];
 
+/** pyodide.toPy() converte `null` num sentinela JsNull, nao em None -- entao
+ * todo `is None`/`is not None` do lado Python fica sempre falso pra dados
+ * que vieram de JSON.parse (ex: validade de lote sem vencimento, isopor
+ * vazio). `undefined` converte certo pra None, entao troca antes de mandar.
+ * Bug real: um save salvo (JSON no disco) restaurado derrubava o bridge
+ * com "'<' not supported between instances of 'JsNull' and 'int'". */
+function semNull(valor) {
+  if (valor === null) return undefined;
+  if (Array.isArray(valor)) return valor.map(semNull);
+  if (valor && typeof valor === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(valor)) out[k] = semNull(v);
+    return out;
+  }
+  return valor;
+}
+
 export class DindinEngine {
   constructor() {
     this.pyodide = null;
@@ -101,7 +118,7 @@ if "/jogo" not in sys.path:
   /** Chama uma funcao da bridge e converte o retorno pra JS puro. */
   _call(nome, ...args) {
     const fn = this.bridge[nome];
-    const py = fn(...args.map((a) => this.pyodide.toPy(a)));
+    const py = fn(...args.map((a) => this.pyodide.toPy(semNull(a))));
     if (py && typeof py.toJs === "function") {
       const js = py.toJs({ dict_converter: Object.fromEntries });
       py.destroy();

@@ -347,3 +347,91 @@ def test_jogar_dia_traz_a_chave_do_resumo():
     assert chave.startswith("resumo.")
     from dindin.i18n import Translator
     assert not Translator("pa").t(chave).startswith("⟨missing:")
+
+
+# ------------------------------------------------- restaurar a jornada salva
+
+def test_restaurar_estado_devolve_a_partida_inteira():
+    """O save da web volta pela ponte: tudo que o jogador conquistou tem que
+    atravessar (dia, caixa, fama, estoque, isopor, pontos)."""
+    from dindin.sim.economy import comprar
+
+    state = bridge.estado_de_json(bridge.novo_jogo("df", 7))
+    state.dia = 12
+    state.caixa = 45_000
+    state.reputacao = 33.5
+    state.locais_desbloqueados = ["casa", "isopor", "praia"]
+    state.local_atual = "praia"
+    state.isopor = "simples"
+    state.isopor_dias = 4
+    state.upgrades = {"freezer_maior"}
+    comprar(state, {"polpa_comum": 2})
+    state.inventario.prontos["coco"] = 30
+    salvo = bridge.estado_para_json(state)
+
+    voltou = bridge.restaurar_estado(salvo)
+    assert json.loads(json.dumps(voltou)) == voltou, "o restore tem que ser JSON puro"
+    for campo in ("seed", "regiao", "dia", "caixa", "reputacao",
+                  "locais_desbloqueados", "upgrades", "isopor", "isopor_dias"):
+        assert voltou[campo] == salvo[campo], campo
+    assert voltou["inventario"]["prontos"] == {"coco": 30}
+    assert voltou["inventario"]["lotes"]["polpa_comum"]
+
+
+def test_restaurar_estado_recoloca_no_melhor_ponto():
+    """Quem salvou depois de um socorro (em casa) nao pode reabrir preso em
+    casa: o ponto ja e dele, o restore devolve o mais avancado."""
+    salvo = bridge.novo_jogo("df", 7)
+    salvo["locais_desbloqueados"] = ["casa", "isopor", "praia"]
+    salvo["local_atual"] = "casa"
+    assert bridge.restaurar_estado(salvo)["local_atual"] == "praia"
+
+
+def test_restaurar_estado_aceita_save_antigo_sem_lotes():
+    """Save de antes dos lotes/isopor: nao pode explodir, o jogador perderia
+    a jornada so porque o formato mudou."""
+    antigo = {
+        "seed": 5, "regiao": "ce", "dia": 9, "caixa": 12_000,
+        "reputacao": 20.0, "local_atual": "isopor",
+        "locais_desbloqueados": ["casa", "isopor"],
+        "inventario": {"ingredientes": {"acucar": 3.0}, "prontos": {"coco": 10}},
+    }
+    voltou = bridge.restaurar_estado(antigo)
+    assert voltou["dia"] == 9
+    assert voltou["caixa"] == 12_000
+    assert voltou["inventario"]["prontos"] == {"coco": 10}
+    assert voltou["inventario"]["ingredientes"]["acucar"] == 3.0
+    assert voltou["socorro_usado"] is False
+    assert voltou["isopor"] is None
+
+
+def test_restaurado_continua_jogando_o_dia_seguinte():
+    """O teste que amarra o bug da web: depois de restaurar tem que dar pra
+    rodar o proximo dia e o dia tem que avancar."""
+    salvo = bridge.novo_jogo("df", 7)
+    salvo["dia"] = 6
+    salvo["caixa"] = 30_000
+    salvo["locais_desbloqueados"] = ["casa", "isopor"]
+    salvo["isopor"] = "simples"
+    salvo["isopor_dias"] = 2
+
+    restaurado = bridge.restaurar_estado(salvo)
+    out = bridge.jogar_dia(restaurado, {"compras": {}, "producao": {}, "precos": {}})
+    assert out["estado"]["dia"] == 7
+    assert out["resultado"]["dia"] == 6
+
+
+def test_restaurar_estado_nao_mexe_no_dict_recebido():
+    """A ponte nao pode mutar o dump que veio do navegador."""
+    salvo = bridge.novo_jogo("df", 7)
+    salvo["local_atual"] = "casa"
+    salvo["locais_desbloqueados"] = ["casa", "isopor"]
+    copia = json.loads(json.dumps(salvo))
+    bridge.restaurar_estado(salvo)
+    assert salvo == copia
+
+
+def test_restaurar_estado_recusa_dump_sem_os_campos_basicos():
+    """Arquivo torto tem que dar erro claro, nao um estado meio construido."""
+    with pytest.raises((KeyError, TypeError)):
+        bridge.restaurar_estado({"version": 2, "lixo": True})

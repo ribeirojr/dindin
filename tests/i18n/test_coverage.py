@@ -66,3 +66,23 @@ def test_chave_inexistente_fica_visivel():
 ])
 def test_formato_de_dinheiro_brasileiro(valor, esperado):
     assert money(valor) == esperado
+
+
+@pytest.mark.parametrize("modulo", ["base_ptbr", "base_en"])
+def test_nenhuma_chave_repetida_na_base(modulo):
+    """Chave repetida no dict literal e invisivel: a segunda apaga a primeira
+    em silencio e a traducao que o autor escreveu nunca aparece em jogo.
+    Foi o que aconteceu com ui.escolha_regiao."""
+    import ast
+    import collections
+    import pathlib
+
+    caminho = pathlib.Path(__file__).parents[2] / "src" / "dindin" / "i18n" / f"{modulo}.py"
+    arvore = ast.parse(caminho.read_text(encoding="utf-8"))
+    repetidas: list[str] = []
+    for no in ast.walk(arvore):
+        if isinstance(no, ast.Dict):
+            chaves = [k.value for k in no.keys
+                      if isinstance(k, ast.Constant) and isinstance(k.value, str)]
+            repetidas += [k for k, n in collections.Counter(chaves).items() if n > 1]
+    assert not repetidas, f"{modulo} tem chaves repetidas: {sorted(set(repetidas))}"

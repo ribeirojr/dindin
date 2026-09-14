@@ -48,6 +48,8 @@ function salvarConquistas(lista) {
 }
 // null = ainda nao escolhido hoje; desenharGelo adota a sugestao do calor.
 let gelo = null;
+// Redesenha o texto do overlay de arrastar-e-soltar quando o idioma muda.
+let atualizarDropOverlay = () => {};
 // Refaz a tela atual depois de trocar o tema. So telaDia/telaRelatorio tem
 // cabecalho (com o botao de tema), entao so elas precisam se registrar aqui.
 let redesenharTelaAtual = () => {};
@@ -80,87 +82,137 @@ function mostrarToast(msg, tipo = "sucesso") {
   setTimeout(() => toast.remove(), 4000);
 }
 
-function dumpJornada(estadoAtual) {
-  if (typeof process !== "undefined") return;
+/* Versao do formato do save. v1 era so `{estado}`; v2 leva localStorage,
+ * conquistas e tema junto. Ler v1 continua funcionando pra sempre: o jogador
+ * nao pode perder a jornada porque o formato mudou. */
+const SAVE_VERSAO = 2;
+
+/** Monta o dump. Separado do download porque so isto e testavel fora do
+ * navegador — a versao antiga desistia com `if (typeof process ...) return`,
+ * e por isso o botao de salvar nunca passou por teste nenhum. */
+function montarDump(estadoAtual) {
   const dump = {
-    version: 2,
+    version: SAVE_VERSAO,
     timestamp: new Date().toISOString(),
     localStorage: {},
     estado: estadoAtual,
-    planning: {carrinho: (typeof carrinho === "object" ? {...carrinho} : {}), producao: (typeof producao === "object" ? {...producao} : {}), precos: (typeof precos === "object" ? {...precos} : {}), gelo: gelo ?? 0},
-    journey: {
-      locais_desbloqueados: [...(estadoAtual.locais_desbloqueados || [])],
-      melhor_local: estadoAtual.local_atual,
-      regiao: estadoAtual.regiao,
-      seed: estadoAtual.seed
-    },
-    conquistas,
+    // O planejamento do dia em aberto: carrinho, producao, precos e gelo.
+    planning: { carrinho: { ...carrinho }, producao: { ...producao },
+                precos: { ...precos }, gelo: gelo ?? 0 },
+    conquistas: [...conquistas],
     tema,
-    lang
+    lang,
   };
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
     if (k && k.startsWith("dindin-")) dump.localStorage[k] = localStorage.getItem(k);
   }
-  console.log("🍦 Jornada salva (day-end):", dump);
-  const blob = new Blob([JSON.stringify(dump, null, 2)], {type: "application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = el("a");
-  a.href = url;
-  const shortId = ((estadoAtual.seed % 100000) >>> 0).toString(36).toUpperCase().padStart(6, "0");
-  a.download = `dindin-dia${String(estadoAtual.dia).padStart(2, "0")}-${shortId}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  mostrarToast("Jornada guardada! O isopor tá seguro na memória, vixe.");
+  return dump;
 }
 
-function restaurarDeDump(dump) {
-  if (!dump.version || dump.version === 1) {
-    const oldEstado = dump.estado || dump;
-    dump = {
-      version: 2,
-      localStorage: {
-        "dindin-tema": dump.tema || localStorage.getItem("dindin-tema") || "escuro",
-        "dindin-conquistas": JSON.stringify(dump.conquistas || conquistas || [])
-      },
-      estado: oldEstado,
-      planning: {},
-      journey: {
-        locais_desbloqueados: oldEstado.locais_desbloqueados || [],
-        melhor_local: oldEstado.local_atual || "casa",
-        regiao: oldEstado.regiao,
-        seed: oldEstado.seed
-      },
-      conquistas: dump.conquistas || [],
-      tema: dump.tema || "escuro",
-      lang: "pt",
-      activeGame: !!oldEstado.dia
-    };
+/** Nome do arquivo: dia + um id curto da seed, pra dar pra achar o save certo
+ * no meio de varios downloads. */
+function nomeDoSave(estadoAtual) {
+  const shortId = ((estadoAtual.seed % 100000) >>> 0).toString(36)
+    .toUpperCase().padStart(6, "0");
+  return `dindin-dia${String(estadoAtual.dia).padStart(2, "0")}-${shortId}.json`;
+}
+
+function dumpJornada(estadoAtual) {
+  if (!estadoAtual) return null;
+  const dump = montarDump(estadoAtual);
+  // O download so existe no navegador; fora dele (testes) montar o dump basta.
+  if (typeof Blob === "function" && typeof URL?.createObjectURL === "function") {
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = el("a");
+    a.href = url;
+    a.download = nomeDoSave(estadoAtual);
+    a.click();
+    URL.revokeObjectURL(url);
   }
-  const keys = ["dindin-tema", "dindin-conquistas"];
-  keys.forEach(k => localStorage.removeItem(k));
+  mostrarToast(t("jornada.toast_salvo"));
+  return dump;
+}
+
+/** Normaliza qualquer save (v1 ou v2) para o formato atual. */
+function normalizarDump(dump) {
+  if (!dump || typeof dump !== "object") return null;
+  if (dump.version === SAVE_VERSAO) return dump;
+  // v1 (ou um estado cru salvo do console): so tinha o estado.
+  const estadoAntigo = dump.estado ?? dump;
+  return {
+    version: SAVE_VERSAO,
+    localStorage: {
+      "dindin-tema": dump.tema ?? localStorage.getItem("dindin-tema") ?? "escuro",
+      "dindin-conquistas": JSON.stringify(dump.conquistas ?? []),
+    },
+    estado: estadoAntigo,
+    planning: dump.planning ?? {},
+    conquistas: dump.conquistas ?? [],
+    tema: dump.tema ?? "escuro",
+    lang: dump.lang ?? lang,
+  };
+}
+
+/** Um save so vale se der pra reabrir a partida: sem regiao/dia nao da. */
+function dumpValido(dump) {
+  const e = dump?.estado;
+  return !!e && typeof e === "object"
+      && typeof e.regiao === "string" && Number.isFinite(e.dia)
+      && Number.isFinite(e.seed) && Number.isFinite(e.caixa);
+}
+
+function restaurarDeDump(cru) {
+  const dump = normalizarDump(cru);
+  // Recusa antes de mexer em qualquer coisa: um arquivo torto nao pode
+  // derrubar a partida que o jogador ja tem aberta.
+  if (!dumpValido(dump)) {
+    mostrarToast(t("jornada.erro"), "erro");
+    return false;
+  }
+
+  // O Python e quem manda no estado: passar pelo bridge valida os campos,
+  // preenche o que faltar em saves antigos (lotes, isopor) e recoloca o
+  // jogador no melhor ponto ja desbloqueado.
+  let restaurado;
+  try {
+    restaurado = eng.restaurarEstado(dump.estado);
+  } catch {
+    mostrarToast(t("jornada.erro"), "erro");
+    return false;
+  }
+
   if (dump.localStorage) {
     Object.entries(dump.localStorage).forEach(([k, v]) => {
-      if (k.startsWith("dindin-")) localStorage.setItem(k, v);
+      if (k.startsWith("dindin-") && typeof v === "string") localStorage.setItem(k, v);
     });
   }
   tema = localStorage.getItem("dindin-tema") === "claro" ? "claro" : "escuro";
   document.documentElement.dataset.tema = tema;
   conquistas = carregarConquistas();
-  if (dump.estado) {
-    estado = dump.estado;
-    if (dump.journey) {
-      estado.locais_desbloqueados = dump.journey.locais_desbloqueados || estado.locais_desbloqueados;
-    }
-    catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
-  }
+  if (dump.lang === "pt" || dump.lang === "en") lang = dump.lang;
+
+  estado = restaurado;
+  catalogo = eng.catalogo(estado.regiao, estado.locais_desbloqueados, lang);
+  // A URL tem que acompanhar: recarregar a pagina depois de restaurar nao
+  // pode jogar o jogador numa partida diferente.
+  history.replaceState({}, "",
+    `?r=${estado.regiao}&seed=${estado.seed}${lang === "en" ? "&lang=en" : ""}`);
+
   mostrarToast(t("jornada.toast_carregado"));
-  telaRegioes();
+  // Volta DENTRO do dia. Cair na tela de regioes era o bug: clicar na regiao
+  // chamava novoJogo() e apagava a jornada recem-restaurada.
+  telaDia();
+  return true;
 }
 
 function setupDragDrop() {
   const overlay = el("div", "drop-overlay");
-  overlay.innerHTML = `<div class="drop-box">Arraste o save.json aqui (dindin-diaXX-ABCDEF.json) para restaurar a jornada. Salva automaticamente no fim de cada dia.</div>`;
+  const caixa = el("div", "drop-box", t("jornada.instrucao"));
+  overlay.append(caixa);
+  // O texto vive no i18n, entao precisa ser redesenhado quando o idioma muda.
+  atualizarDropOverlay = () => { caixa.textContent = t("jornada.instrucao"); };
   overlay.style.display = "none";
   document.body.append(overlay);
   let dragCounter = 0;
@@ -177,9 +229,7 @@ function setupDragDrop() {
     const file = e.dataTransfer.files[0];
     if (file && file.name.endsWith(".json")) {
       try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        restaurarDeDump(data);
+        restaurarDeDump(JSON.parse(await file.text()));
       } catch {
         mostrarToast(t("jornada.erro"), "erro");
       }
@@ -238,6 +288,7 @@ function telaRegioes() {
       const url = new URLSearchParams(location.search);
       if (lang === "en") url.set("lang", "en"); else url.delete("lang");
       history.replaceState({}, "", url.size ? `?${url}` : location.pathname);
+      atualizarDropOverlay();
       telaRegioes();
     };
     picker.append(chip);
@@ -252,9 +303,7 @@ function telaRegioes() {
       const file = input.files[0];
       if (file) {
         try {
-          const text = await file.text();
-          const data = JSON.parse(text);
-          restaurarDeDump(data);
+          restaurarDeDump(JSON.parse(await file.text()));
         } catch {
           mostrarToast(t("jornada.erro"), "erro");
         }
@@ -346,6 +395,7 @@ function cabecalho(clima) {
   h.append(s);
   h.append(botaoTema());
   const salvarBtn = el("button", "backup-btn", "💾");
+  salvarBtn.title = t("jornada.salvar");
   salvarBtn.onclick = () => dumpJornada(estado);
   h.append(salvarBtn);
   return h;
